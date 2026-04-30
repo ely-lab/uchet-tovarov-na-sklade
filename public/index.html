@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Учёт товаров на складе</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- 🔐 LOGIN SCREEN -->
+<section id="login-screen" class="login-screen">
+  <form id="login-form" class="login-card">
+    <h1>Вход в систему</h1>
+
+    <input id="login-username" placeholder="Логин" required />
+    <input id="login-password" type="password" placeholder="Пароль" required />
+
+    <button type="submit" class="primary">Войти</button>
+
+    <p id="login-message" class="message"></p>
+  </form>
+</section>
+
+<!-- 📦 APP -->
+<div id="app" class="hidden">
+
+<header class="site-header">
+  <div>
+    <p class="eyebrow">Учёт товаров на складе</p>
+    <h1>Инвентаризация склада</h1>
+  </div>
+
+  <div class="header-actions">
+    <button class="secondary hidden" id="btn-logout">Выйти</button>
+    <button class="primary hidden" id="btn-add-item">Добавить товар</button>
+  </div>
+</header>
+
+<main class="page-content">
+
+<section class="controls">
+  <input id="search" type="search" placeholder="Поиск товара или штрихкода..." />
+
+  <select id="filter-brand">
+    <option value="all">Все бренды</option>
+    <option>Ferrero</option>
+    <option>HEINZ</option>
+    <option>Perfetti Van Melle</option>
+  </select>
+
+  <div class="summary" id="summary"></div>
+</section>
+
+<section id="inventory" class="inventory-grid"></section>
+
+<!-- ➕ ADD MODAL -->
+<section id="add-section" class="modal hidden">
+  <div class="modal-card">
+
+    <button type="button" class="close-button" id="closeModal">×</button>
+
+    <h2>Добавить товар</h2>
+
+    <form id="item-form" class="item-form">
+
+      <input id="item-name" placeholder="Название" required />
+      <input id="item-barcode" placeholder="Штрихкод" required />
+
+      <select id="item-brand" required>
+        <option>Ferrero</option>
+        <option>HEINZ</option>
+      </select>
+
+      <input id="item-quantity" type="number" placeholder="Количество" required />
+
+      <select id="item-unit" required>
+        <option value="шт">шт</option>
+        <option value="кг">кг</option>
+      </select>
+
+      <button type="submit" class="primary">Сохранить</button>
+
+    </form>
+
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Складская система</p>
+</footer>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

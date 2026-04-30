@@ -1,0 +1,8 @@
+{
+  "appId": "com.sklad.app",
+  "appName": "Склад",
+  "webDir": "public",
+  "server": {
+  "url": "https://uchet-tovarov-na-sklade.onrender.com"
+}
+}
