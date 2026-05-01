@@ -34,25 +34,67 @@
   <div class="header-actions">
     <button class="secondary hidden" id="btn-logout">Выйти</button>
     <button class="primary hidden" id="btn-add-item">Добавить товар</button>
+    <button class="secondary hidden" id="btn-return-order">Возврат по накладной</button>
+    <button class="secondary hidden" id="btn-inventory">Инвентаризация</button>
+    <button class="secondary hidden" id="btn-transfer">Перемещение</button>
   </div>
 </header>
 
 <main class="page-content">
+<section id="module-menu" class="controls hidden">
+  <button class="primary" id="btn-module-warehouse">Склад</button>
+  <button class="secondary" id="btn-module-returns">Возвраты</button>
+  <button class="secondary" id="btn-module-registries">Реестры</button>
+</section>
 
+<section id="warehouse-section" class="hidden">
 <section class="controls">
   <input id="search" type="search" placeholder="Поиск товара или штрихкода..." />
 
   <select id="filter-brand">
     <option value="all">Все бренды</option>
     <option>Ferrero</option>
-    <option>HEINZ</option>
-    <option>Perfetti Van Melle</option>
+<option>HEINZ</option>
+<option>Perfetti Van Melle</option>
+<option>Tchibo</option>
+<option>Selpak</option>
+<option>Hochland</option>
+<option>Chupa Chups</option>
+<option>Bonduelle</option>
+<option>Globus</option>
+<option>Global White</option>
+<option>Lacalut</option>
+<option>Loli</option>
+<option>Pine</option>
+<option>Peros</option>
+<option>Storck</option>
+<option>Vernet</option>
+<option>ЕЖК</option>
+<option>Кампина</option>
+<option>Конфитрейд</option>
+<option>Объединённые кондитеры</option>
+<option>Раменский</option>
+<option>РусАгро</option>
+<option>Савана</option>
+<option>Эвиап</option>
+<option>Эрманн</option>
   </select>
 
   <div class="summary" id="summary"></div>
 </section>
 
 <section id="inventory" class="inventory-grid"></section>
+</section>
+
+<section id="returns-section" class="controls hidden">
+  <p>Операции возврата выполняются по накладным 1С.</p>
+  <button class="primary" id="btn-return-order-page">Сделать возврат по накладной</button>
+</section>
+
+<section id="registries-section" class="controls hidden">
+  <h3>Реестры погрузочных листов (1С)</h3>
+  <div id="registry-list"></div>
+</section>
 
 <!-- ➕ ADD MODAL -->
 <section id="add-section" class="modal hidden">
@@ -70,6 +112,29 @@
       <select id="item-brand" required>
         <option>Ferrero</option>
         <option>HEINZ</option>
+        <option>Perfetti Van Melle</option>
+        <option>Tchibo</option> 
+        <option>Selpak</option>
+        <option>Hochland</option>
+        <option>Chupa Chups</option>
+        <option>Bonduelle</option>
+        <option>Globus</option>
+        <option>Global White</option>
+        <option>Lacalut</option>
+        <option>Loli</option>
+        <option>Pine</option>
+        <option>Peros</option>
+        <option>Storck</option>
+        <option>Vernet</option>
+        <option>ЕЖК</option>
+        <option>Кампина</option>
+        <option>Конфитрейд</option>
+        <option>Объединённые кондитеры</option>
+        <option>Раменский</option>
+        <option>РусАгро</option>
+        <option>Савана</option>
+        <option>Эвиап</option>
+        <option>Эрманн</option>
       </select>
 
       <input id="item-quantity" type="number" placeholder="Количество" required />
