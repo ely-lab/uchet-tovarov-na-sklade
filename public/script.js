@@ -76,7 +76,6 @@ loginForm.addEventListener('submit', async (e) => {
     loginScreen.classList.add('hidden');
     app.classList.remove('hidden');
 
-    btnAddItem.classList.remove('hidden');
     btnLogout.classList.remove('hidden');
     moduleMenu.classList.remove('hidden');
  
@@ -242,8 +241,7 @@ if (saved) {
 
   loginScreen.classList.add('hidden');
   app.classList.remove('hidden');
-
-  btnAddItem.classList.remove('hidden');
+  
   btnLogout.classList.remove('hidden');
   moduleMenu.classList.remove('hidden');
 
@@ -338,8 +336,6 @@ function showModule(moduleName) {
 
   if (moduleName === 'menu') {
     moduleMenu.classList.remove('hidden');
-
-    showModule('menu');
 
     warehouseSection.classList.add('hidden');
     returnsSection.classList.add('hidden');
