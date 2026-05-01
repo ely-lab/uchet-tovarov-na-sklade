@@ -80,16 +80,9 @@ loginForm.addEventListener('submit', async (e) => {
     moduleMenu.classList.remove('hidden');
  
     showModule('menu');
-
-    warehouseSection.classList.add('hidden');
-    returnsSection.classList.add('hidden');
-    registriesSection.classList.add('hidden');
-
-    btnInventory.classList.add('hidden');
-    btnTransfer.classList.add('hidden');
-    btnReturnOrder.classList.add('hidden');
-
-  } catch (err) {
+  } 
+  
+  catch (err) {
     loginMessage.textContent = err.message;
   }
 });
@@ -241,7 +234,7 @@ if (saved) {
 
   loginScreen.classList.add('hidden');
   app.classList.remove('hidden');
-  
+
   btnLogout.classList.remove('hidden');
   moduleMenu.classList.remove('hidden');
 
