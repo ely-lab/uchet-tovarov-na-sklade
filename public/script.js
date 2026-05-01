@@ -11,6 +11,7 @@ const summaryOutput = document.getElementById('summary');
 
 const btnAddItem = document.getElementById('btn-add-item');
 const btnLogout = document.getElementById('btn-logout');
+const btnBackMenu = document.getElementById('btn-back-menu');
 const btnReturnOrder = document.getElementById('btn-return-order');
 const btnInventory = document.getElementById('btn-inventory');
 const btnTransfer = document.getElementById('btn-transfer');
@@ -247,14 +248,6 @@ if (saved) {
   moduleMenu.classList.remove('hidden');
 
   showModule('menu');
-
-  warehouseSection.classList.add('hidden');
-  returnsSection.classList.add('hidden');
-  registriesSection.classList.add('hidden');
-
-  btnInventory.classList.add('hidden');
-  btnTransfer.classList.add('hidden');
-  btnReturnOrder.classList.add('hidden');
 }
 
 async function handleWriteOff(id) {
@@ -341,28 +334,47 @@ btnTransfer.addEventListener('click', async () => {
 });
 
 function showModule(moduleName) {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   if (moduleName === 'menu') {
+    moduleMenu.classList.remove('hidden');
+
+    showModule('menu');
+
     warehouseSection.classList.add('hidden');
     returnsSection.classList.add('hidden');
     registriesSection.classList.add('hidden');
 
+    btnBackMenu.classList.add('hidden');
+    btnAddItem.classList.add('hidden');
     btnInventory.classList.add('hidden');
     btnTransfer.classList.add('hidden');
     btnReturnOrder.classList.add('hidden');
+
+    btnLogout.classList.remove('hidden');
     return;
   }
+
+  moduleMenu.classList.add('hidden');
 
   warehouseSection.classList.toggle('hidden', moduleName !== 'warehouse');
   returnsSection.classList.toggle('hidden', moduleName !== 'returns');
   registriesSection.classList.toggle('hidden', moduleName !== 'registries');
+
+  btnBackMenu.classList.remove('hidden');
+  btnLogout.classList.remove('hidden');
+
+  btnAddItem.classList.toggle(
+    'hidden',
+    !(moduleName === 'warehouse' && user && user.role === 'head_office')
+  );
 
   btnInventory.classList.toggle('hidden', moduleName !== 'warehouse');
   btnTransfer.classList.toggle('hidden', moduleName !== 'warehouse');
   btnReturnOrder.classList.toggle('hidden', moduleName !== 'returns');
 
   if (moduleName === 'warehouse') {
-  loadItems();
+    loadItems();
   }
 
   if (moduleName === 'registries') {
@@ -373,6 +385,10 @@ function showModule(moduleName) {
 btnModuleWarehouse.addEventListener('click', () => showModule('warehouse'));
 btnModuleReturns.addEventListener('click', () => showModule('returns'));
 btnModuleRegistries.addEventListener('click', () => showModule('registries'));
+
+btnBackMenu.addEventListener('click', () => {
+  showModule('menu');
+});
 
 async function loadRegistries() {
   try {
