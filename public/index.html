@@ -42,10 +42,24 @@
 </header>
 
 <main class="page-content">
-<section id="module-menu" class="controls hidden">
-  <button class="primary" id="btn-module-warehouse">Склад</button>
-  <button class="primary" id="btn-module-returns">Возвраты</button>
-  <button class="primary" id="btn-module-registries">Реестры</button>
+<section id="module-menu" class="module-menu hidden">
+  <button class="module-card" id="btn-module-warehouse">
+    <span class="module-icon">📦</span>
+    <span class="module-title">Склад</span>
+    <span class="module-text">Учёт товаров, списание, инвентаризация</span>
+  </button>
+
+  <button class="module-card" id="btn-module-returns">
+    <span class="module-icon">🔁</span>
+    <span class="module-title">Возвраты</span>
+    <span class="module-text">Возврат товаров по накладным 1С</span>
+  </button>
+
+  <button class="module-card" id="btn-module-registries">
+    <span class="module-icon">📋</span>
+    <span class="module-title">Реестры</span>
+    <span class="module-text">Погрузочные листы и документы</span>
+  </button>
 </section>
 
 <section id="warehouse-section" class="hidden">

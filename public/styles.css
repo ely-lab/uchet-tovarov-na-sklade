@@ -238,3 +238,56 @@ textarea {
     align-items: flex-start;
   }
 }
+
+.module-menu {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin: 2rem 0;
+}
+
+.module-card {
+  border: none;
+  background: white;
+  border-radius: 1.25rem;
+  padding: 1.6rem;
+  min-height: 180px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+  transition: 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  color: #1e293b;
+}
+
+.module-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 45px rgba(15, 23, 42, 0.14);
+}
+
+.module-icon {
+  font-size: 2.2rem;
+}
+
+.module-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.module-text {
+  font-size: 0.95rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+  .module-menu {
+    grid-template-columns: 1fr;
+  }
+
+  .module-card {
+    min-height: 140px;
+  }
+}
