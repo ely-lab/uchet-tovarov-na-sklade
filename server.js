@@ -1,7 +1,10 @@
+// 🔐 ПОДКЛЮЧЕНИЕ
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const multer = require('multer');
+const AdmZip = require('adm-zip');
 
 const app = express();
 const PORT = 3000;
@@ -10,10 +13,10 @@ const DB_PATH = path.join(__dirname, 'database.json');
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// 📦 ЗАГРУЗКА ФАЙЛОВ
+const upload = multer({ dest: 'uploads/' });
 
+// 👥 ПОЛЬЗОВАТЕЛИ
 const USERS = [
   { username: 'admin', password: '12345', role: 'head_office', warehouse: 'all' },
   { username: 'jalalabad', password: '0304', role: 'branch', warehouse: 'Жалал-Абад' },
@@ -25,13 +28,15 @@ const USERS = [
   { username: 'talas', password: '0309', role: 'branch', warehouse: 'Талас' }
 ];
 
-
-// 📦 Загрузка базы
+// 📂 ЗАГРУЗКА БАЗЫ
 function loadDB() {
   if (!fs.existsSync(DB_PATH)) {
-    fs.writeFileSync(DB_PATH, JSON.stringify({ items: [], history: [] }, null, 2));
+    fs.writeFileSync(DB_PATH, JSON.stringify({
+      items: [],
+      history: [],
+      invoices: []
+    }, null, 2));
   }
-
   return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
 }
 
@@ -42,22 +47,17 @@ function saveDB(db) {
 let db = loadDB();
 const sessions = new Map();
 
-
-// 🧠 История
+// 🧠 ИСТОРИЯ
 function addHistory(entry) {
-  db.history = db.history || [];
-
   db.history.push({
     id: Date.now(),
     ...entry,
     date: new Date().toISOString()
   });
-
   saveDB(db);
 }
 
-
-// 🔐 LOGIN
+// 🔐 ВХОД
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
 
@@ -70,6 +70,7 @@ app.post('/api/login', (req, res) => {
   }
 
   const token = crypto.randomBytes(24).toString('hex');
+
   const safeUser = {
     username: user.username,
     role: user.role,
@@ -77,14 +78,14 @@ app.post('/api/login', (req, res) => {
   };
 
   sessions.set(token, safeUser);
+
   res.json({ user: safeUser, token });
 });
 
+// 🔐 ПРОВЕРКА
 function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ')
-    ? authHeader.slice(7).trim()
-    : null;
+  const token = authHeader.replace('Bearer ', '');
 
   if (!token || !sessions.has(token)) {
     return res.status(401).json({ error: 'Требуется авторизация' });
@@ -94,38 +95,25 @@ function requireAuth(req, res, next) {
   next();
 }
 
-app.post('/api/logout', requireAuth, (req, res) => {
-  const token = req.headers.authorization.slice(7).trim();
-  sessions.delete(token);
-  res.json({ success: true });
-});
-
-
-// 📦 GET ITEMS
+// 📦 ПОЛУЧИТЬ ТОВАРЫ
 app.get('/api/items', requireAuth, (req, res) => {
-  const { warehouse, role } = req.user;
-
-  if (role === 'head_office') {
+  if (req.user.role === 'head_office') {
     return res.json(db.items);
   }
 
-  const filtered = db.items.filter(i => i.warehouse === warehouse);
+  const filtered = db.items.filter(
+    i => i.warehouse === req.user.warehouse
+  );
+
   res.json(filtered);
 });
 
-
-// ➕ ADD ITEM
+// ➕ ДОБАВИТЬ
 app.post('/api/items', requireAuth, (req, res) => {
   const { name, barcode, brand, quantity, unit } = req.body;
 
   if (!name || !barcode || !brand || typeof quantity !== 'number' || !unit) {
     return res.status(400).json({ error: 'Некорректные данные' });
-  }
-
-  const validUser = USERS.find(u => u.username === req.user.username);
-
-  if (!validUser) {
-    return res.status(403).json({ error: 'Пользователь не найден' });
   }
 
   const item = {
@@ -135,7 +123,7 @@ app.post('/api/items', requireAuth, (req, res) => {
     brand,
     quantity,
     unit,
-    warehouse: validUser.warehouse,
+    warehouse: req.user.warehouse,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -145,32 +133,23 @@ app.post('/api/items', requireAuth, (req, res) => {
 
   addHistory({
     action: 'create',
-    user: validUser.username,
-    text: `Создан товар: ${name} (${quantity} ${unit})`
+    user: req.user.username,
+    text: `Создан товар ${name}`
   });
 
   res.json(item);
 });
 
-
-// ✏️ UPDATE ITEM
+// ✏️ ИЗМЕНИТЬ
 app.put('/api/items/:id', requireAuth, (req, res) => {
   const id = Number(req.params.id);
-  const { name, barcode, brand, quantity, unit } = req.body;
-
   const item = db.items.find(i => i.id === id);
 
   if (!item) {
     return res.status(404).json({ error: 'Товар не найден' });
   }
 
-  const oldQuantity = item.quantity;
-
-  item.name = name;
-  item.barcode = barcode;
-  item.brand = brand;
-  item.quantity = quantity;
-  item.unit = unit;
+  Object.assign(item, req.body);
   item.updatedAt = new Date().toISOString();
 
   saveDB(db);
@@ -178,207 +157,106 @@ app.put('/api/items/:id', requireAuth, (req, res) => {
   addHistory({
     action: 'update',
     user: req.user.username,
-    text: `Изменён товар: ${name}. Было: ${oldQuantity}, стало: ${quantity}`
+    text: `Изменён товар ${item.name}`
   });
 
   res.json(item);
 });
 
-
-// ❌ DELETE ITEM
+// ❌ УДАЛИТЬ
 app.delete('/api/items/:id', requireAuth, (req, res) => {
   const id = Number(req.params.id);
+  db.items = db.items.filter(i => i.id !== id);
 
-  const index = db.items.findIndex(i => i.id === id);
-
-  if (index === -1) {
-    return res.status(404).json({ error: 'Товар не найден' });
-  }
-
-  const removed = db.items.splice(index, 1)[0];
   saveDB(db);
 
   addHistory({
     action: 'delete',
     user: req.user.username,
-    text: `Удалён товар: ${removed.name}`
+    text: `Удалён товар ID ${id}`
   });
 
   res.json({ success: true });
 });
 
-
-// 📊 HISTORY
-app.get('/api/history', requireAuth, (req, res) => {
-  res.json(db.history || []);
+// 📄 НАКЛАДНЫЕ
+app.get('/api/invoices', requireAuth, (req, res) => {
+  res.json(db.invoices || []);
 });
 
+// 🔁 ВОЗВРАТ ПО НАКЛАДНОЙ
+app.post('/api/returns', requireAuth, (req, res) => {
+  const { invoiceId, items } = req.body;
 
-app.post('/api/items/:id/writeoff', requireAuth, (req, res) => {
-  const id = Number(req.params.id);
-  const { amount } = req.body;
+  const invoice = db.invoices.find(i => i.id === invoiceId);
 
-  const item = db.items.find(i => i.id === id);
-
-  if (!item) {
-    return res.status(404).json({ error: 'Товар не найден' });
+  if (!invoice) {
+    return res.status(404).json({ error: 'Накладная не найдена' });
   }
 
-  if (typeof amount !== 'number' || amount <= 0) {
-    return res.status(400).json({ error: 'Некорректное количество' });
+  if (!Array.isArray(items) || !items.length) {
+    return res.status(400).json({ error: 'Не выбраны товары для возврата' });
   }
 
-  if (item.quantity < amount) {
-    return res.status(400).json({ error: 'Недостаточно товара' });
-  }
-
-  item.quantity -= amount;
-  item.updatedAt = new Date().toISOString();
-
-  saveDB(db);
-
-  // 🧠 история
-  db.history = db.history || [];
-  db.history.push({
-    id: Date.now(),
-    action: 'writeoff',
-    user: req.user.username,
-    text: `Списание: ${item.name} -${amount} ${item.unit}`,
-    date: new Date().toISOString()
-  });
-
-  saveDB(db);
-
-  res.json(item);
-});
-
-app.get('/api/orders', requireAuth, (req, res) => {
-  const orders = (db.orders || []).filter(o => (o.source || '1c') === '1c');
-  res.json(orders);
-});
-
-app.post('/api/orders/:id/return', requireAuth, (req, res) => {
-  const orderId = Number(req.params.id);
-  const order = (db.orders || []).find(o => o.id === orderId && (o.source || '1c') === '1c');
-
-  if (!order) {
-    return res.status(404).json({ error: 'Накладная 1С не найдена' });
-  }
-
-  const lines = order.items || [];
   let processed = 0;
 
-  for (const line of lines) {
-    const item = db.items.find(i => i.barcode === line.barcode && i.warehouse === req.user.warehouse);
-    if (!item) continue;
-    item.quantity += Number(line.quantity || 0);
-    item.updatedAt = new Date().toISOString();
-    processed += 1;
+  for (const returnItem of items) {
+    if (!returnItem.barcode || typeof returnItem.quantity !== 'number' || returnItem.quantity <= 0) {
+      continue;
+    }
+
+    const invoiceLine = invoice.items.find(i => i.barcode === returnItem.barcode);
+
+    if (!invoiceLine) {
+      continue;
+    }
+
+    if (returnItem.quantity > invoiceLine.quantity) {
+      return res.status(400).json({
+        error: `Количество возврата по товару "${invoiceLine.name}" больше количества в накладной`
+      });
+    }
+
+    const stockItem = db.items.find(i =>
+      i.barcode === returnItem.barcode &&
+      (req.user.role === 'head_office' || i.warehouse === req.user.warehouse)
+    );
+
+    if (stockItem) {
+      stockItem.quantity += returnItem.quantity;
+      stockItem.updatedAt = new Date().toISOString();
+      processed++;
+    }
   }
 
   saveDB(db);
+
   addHistory({
     action: 'return',
     user: req.user.username,
-    text: `Возврат по накладной 1С №${orderId}. Позиций: ${processed}`
+    text: `Возврат по накладной №${invoiceId}. Позиций: ${processed}`
   });
 
   res.json({ success: true, processed });
 });
 
-app.post('/api/inventory/recount', requireAuth, (req, res) => {
-  const { barcode, countedQty } = req.body;
-  const item = db.items.find(i => i.barcode === barcode && i.warehouse === req.user.warehouse);
-  if (!item) {
-    return res.status(404).json({ error: 'Товар не найден на складе пользователя' });
-  }
-  if (typeof countedQty !== 'number' || countedQty < 0) {
-    return res.status(400).json({ error: 'Некорректный фактический остаток' });
-  }
+// 📦 ЗАГРУЗКА ZIP
+app.post('/api/upload-invoices', upload.single('file'), (req, res) => {
+  const zip = new AdmZip(req.file.path);
+  const entries = zip.getEntries();
 
-  const before = item.quantity;
-  item.quantity = countedQty;
-  item.updatedAt = new Date().toISOString();
+  entries.forEach(entry => {
+    const data = entry.getData().toString('utf8');
+    const invoice = JSON.parse(data);
+    db.invoices.push(invoice);
+  });
+
   saveDB(db);
 
-  addHistory({
-    action: 'inventory',
-    user: req.user.username,
-    text: `Инвентаризация ${item.name}: было ${before}, стало ${countedQty}`
-  });
-
-  res.json(item);
+  res.json({ success: true });
 });
 
-app.post('/api/transfers', requireAuth, (req, res) => {
-  const { barcode, toWarehouse, amount } = req.body;
-  if (!barcode || !toWarehouse || typeof amount !== 'number' || amount <= 0) {
-    return res.status(400).json({ error: 'Некорректные данные перемещения' });
-  }
-
-  const fromItem = db.items.find(i => i.barcode === barcode && i.warehouse === req.user.warehouse);
-  if (!fromItem) {
-    return res.status(404).json({ error: 'Товар не найден на складе отправителя' });
-  }
-  if (fromItem.quantity < amount) {
-    return res.status(400).json({ error: 'Недостаточно товара для перемещения' });
-  }
-
-  let toItem = db.items.find(i => i.barcode === barcode && i.warehouse === toWarehouse);
-  fromItem.quantity -= amount;
-  fromItem.updatedAt = new Date().toISOString();
-
-  if (!toItem) {
-    toItem = {
-      id: Date.now(),
-      name: fromItem.name,
-      barcode: fromItem.barcode,
-      brand: fromItem.brand,
-      quantity: 0,
-      unit: fromItem.unit,
-      warehouse: toWarehouse,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    db.items.push(toItem);
-  }
-
-  toItem.quantity += amount;
-  toItem.updatedAt = new Date().toISOString();
-  saveDB(db);
-
-  addHistory({
-    action: 'transfer',
-    user: req.user.username,
-    text: `Перемещение ${fromItem.name}: ${amount} ${fromItem.unit} из ${req.user.warehouse} в ${toWarehouse}`
-  });
-
-  res.json({ success: true, from: fromItem, to: toItem });
-});
-
-app.get('/api/registries/shipping-lists', requireAuth, (req, res) => {
-  const fromShippingLists = (db.shippingLists || [])
-    .filter(pl => (pl.source || '1c') === '1c');
-  const fromOrders = (db.orders || [])
-    .filter(o => (o.docType || '').toLowerCase() === 'pl' && (o.source || '1c') === '1c')
-    .map(o => ({
-      id: o.id,
-      number: o.number || o.id,
-      date: o.date,
-      warehouse: o.warehouse || req.user.warehouse,
-      items: o.items || [],
-      source: '1c'
-    }));
-
-  const merged = [...fromShippingLists, ...fromOrders].sort((a, b) => {
-    const da = new Date(a.date || 0).getTime();
-    const dbb = new Date(b.date || 0).getTime();
-    return dbb - da;
-  });
-
-  res.json(merged);
-});
-
+// 🚀 СТАРТ
 app.listen(PORT, () => {
-  console.log(`Server started at http://localhost:${PORT}`);
+  console.log('Сервер запущен на http://localhost:' + PORT);
 });

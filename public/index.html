@@ -28,7 +28,7 @@
 <header class="site-header">
   <div>
     <p class="eyebrow">Учёт товаров на складе</p>
-    <h1>Инвентаризация склада</h1>
+    <h1>Склад</h1>
   </div>
 
   <div class="header-actions">
@@ -41,68 +41,74 @@
 </header>
 
 <main class="page-content">
-<section id="module-menu" class="module-menu hidden">
-  <button class="module-card" id="btn-module-warehouse">
-    <span class="module-icon">📦</span>
-    <span class="module-title">Склад</span>
-    <span class="module-text">Учёт товаров, списание, инвентаризация</span>
-  </button>
-
-  <button class="module-card" id="btn-module-returns">
-    <span class="module-icon">🔁</span>
-    <span class="module-title">Возвраты</span>
-    <span class="module-text">Возврат товаров по накладным 1С</span>
-  </button>
-
-  <button class="module-card" id="btn-module-registries">
-    <span class="module-icon">📋</span>
-    <span class="module-title">Реестры</span>
-    <span class="module-text">Погрузочные листы и документы</span>
-  </button>
+<section id="module-menu" class="controls hidden">
+  <button class="primary" id="btn-module-warehouse">Склад</button>
+  <button class="primary" id="btn-module-returns">Возвраты</button>
+  <button class="primary" id="btn-module-registries">Реестры</button>
 </section>
 
 <section id="warehouse-section" class="hidden">
-<section class="controls">
+<div class="controls">
   <input id="search" type="search" placeholder="Поиск товара или штрихкода..." />
 
   <select id="filter-brand">
     <option value="all">Все бренды</option>
     <option>Ferrero</option>
-<option>HEINZ</option>
-<option>Perfetti Van Melle</option>
-<option>Tchibo</option>
-<option>Selpak</option>
-<option>Hochland</option>
-<option>Chupa Chups</option>
-<option>Bonduelle</option>
-<option>Globus</option>
-<option>Global White</option>
-<option>Lacalut</option>
-<option>Loli</option>
-<option>Pine</option>
-<option>Peros</option>
-<option>Storck</option>
-<option>Vernet</option>
-<option>ЕЖК</option>
-<option>Кампина</option>
-<option>Конфитрейд</option>
-<option>Объединённые кондитеры</option>
-<option>Раменский</option>
-<option>РусАгро</option>
-<option>Савана</option>
-<option>Эвиап</option>
-<option>Эрманн</option>
+    <option>HEINZ</option>
+    <option>Perfetti Van Melle</option>
+    <option>Tchibo</option>
+    <option>Selpak</option>
+    <option>Hochland</option>
+    <option>Chupa Chups</option>
+    <option>Bonduelle</option>
+    <option>Globus</option>
+    <option>Global White</option>
+    <option>Lacalut</option>
+    <option>Loli</option>
+    <option>Pine</option>
+    <option>Peros</option>
+    <option>Storck</option>
+    <option>Vernet</option>
+    <option>ЕЖК</option>
+    <option>Кампина</option>
+    <option>Конфитрейд</option>
+    <option>Объединённые кондитеры</option>
+    <option>Раменский</option>
+    <option>РусАгро</option>
+    <option>Савана</option>
+    <option>Эвиап</option>
+    <option>Эрманн</option>
   </select>
 
   <div class="summary" id="summary"></div>
-</section>
+</div>
 
 <section id="inventory" class="inventory-grid"></section>
 </section>
 
-<section id="returns-section" class="controls hidden">
-  <p>Операции возврата выполняются по накладным 1С.</p>
-  <button class="primary" id="btn-return-order-page">Сделать возврат по накладной</button>
+<section id="returns-section" class="hidden">
+  <div class="return-layout">
+
+    <!-- 📄 Список накладных -->
+    <div class="return-panel">
+      <h2>Возвраты по накладным 1С</h2>
+      <p class="muted">
+        Выберите накладную и укажите количество товара для возврата.
+      </p>
+
+      <div id="invoice-list" class="invoice-list"></div>
+    </div>
+
+    <!-- 📋 Детали накладной -->
+    <div class="return-panel">
+      <h2>Состав накладной</h2>
+
+      <div id="invoice-details">
+        <p class="muted">Накладная не выбрана</p>
+      </div>
+    </div>
+
+  </div>
 </section>
 
 <section id="registries-section" class="controls hidden">
