@@ -78,9 +78,14 @@ loginForm.addEventListener('submit', async (e) => {
     btnAddItem.classList.remove('hidden');
     btnLogout.classList.remove('hidden');
     moduleMenu.classList.remove('hidden');
-    showModule('warehouse');
 
-    loadItems();
+    warehouseSection.classList.add('hidden');
+    returnsSection.classList.add('hidden');
+    registriesSection.classList.add('hidden');
+
+    btnInventory.classList.add('hidden');
+    btnTransfer.classList.add('hidden');
+    btnReturnOrder.classList.add('hidden');
 
   } catch (err) {
     loginMessage.textContent = err.message;
@@ -238,9 +243,14 @@ if (saved) {
   btnAddItem.classList.remove('hidden');
   btnLogout.classList.remove('hidden');
   moduleMenu.classList.remove('hidden');
-  showModule('warehouse');
 
-  loadItems();
+  warehouseSection.classList.add('hidden');
+  returnsSection.classList.add('hidden');
+  registriesSection.classList.add('hidden');
+
+  btnInventory.classList.add('hidden');
+  btnTransfer.classList.add('hidden');
+  btnReturnOrder.classList.add('hidden');
 }
 
 async function handleWriteOff(id) {
@@ -334,6 +344,10 @@ function showModule(moduleName) {
   btnInventory.classList.toggle('hidden', moduleName !== 'warehouse');
   btnTransfer.classList.toggle('hidden', moduleName !== 'warehouse');
   btnReturnOrder.classList.toggle('hidden', moduleName !== 'returns');
+
+  if (moduleName === 'warehouse') {
+  loadItems();
+  }
 
   if (moduleName === 'registries') {
     loadRegistries();
