@@ -355,3 +355,14 @@ textarea {
 .danger:hover {
   background: #dc2626;
 }
+
+#module-menu {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+#module-menu button {
+  min-width: 140px;
+}
