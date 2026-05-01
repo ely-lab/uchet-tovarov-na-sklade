@@ -78,6 +78,8 @@ loginForm.addEventListener('submit', async (e) => {
     btnAddItem.classList.remove('hidden');
     btnLogout.classList.remove('hidden');
     moduleMenu.classList.remove('hidden');
+ 
+    showModule('menu');
 
     warehouseSection.classList.add('hidden');
     returnsSection.classList.add('hidden');
@@ -244,6 +246,8 @@ if (saved) {
   btnLogout.classList.remove('hidden');
   moduleMenu.classList.remove('hidden');
 
+  showModule('menu');
+
   warehouseSection.classList.add('hidden');
   returnsSection.classList.add('hidden');
   registriesSection.classList.add('hidden');
@@ -337,6 +341,18 @@ btnTransfer.addEventListener('click', async () => {
 });
 
 function showModule(moduleName) {
+
+  if (moduleName === 'menu') {
+    warehouseSection.classList.add('hidden');
+    returnsSection.classList.add('hidden');
+    registriesSection.classList.add('hidden');
+
+    btnInventory.classList.add('hidden');
+    btnTransfer.classList.add('hidden');
+    btnReturnOrder.classList.add('hidden');
+    return;
+  }
+
   warehouseSection.classList.toggle('hidden', moduleName !== 'warehouse');
   returnsSection.classList.toggle('hidden', moduleName !== 'returns');
   registriesSection.classList.toggle('hidden', moduleName !== 'registries');
