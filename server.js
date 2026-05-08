@@ -590,19 +590,34 @@ app.get('/api/registries/shipping-lists', requireAuth, (req, res) => {
 }
 );
 
-// 👥 АГЕНТЫ
+// 👥 АГЕНТЫ / ЭКСПЕДИТОРЫ
 app.get('/api/agents', requireAuth, (req, res) => {
   const agents = new Set();
 
   db.agents.forEach(agent => {
-    const name = agent.name || agent;
-    if (name) agents.add(name);
+    const name =
+      agent.name ||
+      agent.agent ||
+      agent.expeditor ||
+      agent.driver ||
+      '';
+
+    if (name) {
+      agents.add(name);
+    }
+  });
+
+  // 🚚 Водитель в погрузочном листе = экспедитор
+  db.shippingLists.forEach(doc => {
+    if (doc.driver) {
+      agents.add(doc.driver);
+    }
   });
 
   const result = Array.from(agents)
     .filter(name => {
-      const lower =
-       String(name).toLowerCase();
+      const lower = String(name).toLowerCase();
+
       return (
         name &&
         name !== 'Не указан' &&
@@ -610,7 +625,6 @@ app.get('/api/agents', requireAuth, (req, res) => {
         !lower.includes('бухгалтер') &&
         !lower.includes('оператор') &&
         !lower.includes('администратор') &&
-        !lower.includes('изменил') &&
         !lower.includes('пользователь')
       );
     })
@@ -874,10 +888,28 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
     });
 
     agentCatalogs.forEach(a => {
-      const ref = a.Ref || a.Ссылка || a.ID;
-      if (!ref) return;
-      agentMap[ref] = a.Description || a.Наименование || a.Name || ref;
-    });
+
+  const ref =
+    a.Ref ||
+    a.Ссылка ||
+    a.ID;
+
+  if (!ref) return;
+
+  const name =
+    a.Description ||
+    a.Наименование ||
+    a.Name ||
+    ref;
+
+  console.log(
+    'АГЕНТ ИЗ XML:',
+    ref,
+    name
+  );
+
+  agentMap[ref] = name;
+});
 
     let importedItems = 0;
     let importedSalesInvoices = 0;
