@@ -151,7 +151,7 @@ function showModule(name) {
     !(name === 'warehouse' && currentUser && currentUser.role === 'head_office')
   );
 
-  btnScanBarcode.classList.toggle('hidden', name !== 'warehouse');
+  // btnScanBarcode.classList.toggle('hidden', name !== 'warehouse');
   btnInventory.classList.toggle('hidden', name !== 'warehouse');
   btnTransfer.classList.toggle('hidden', name !== 'warehouse');
 

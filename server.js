@@ -835,6 +835,10 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
 
     // ✅ В XML реальные данные лежат глубже, поэтому ищем нужные объекты по всему XML
     const salesDocs = toArray(findByKey(parsed, 'DocumentObject.РасходнаяНакладная'));
+    console.log(
+     'SALES DOC SAMPLE:',
+     JSON.stringify(salesDocs[0], null, 2)
+    );
     const returnDocs = toArray(findByKey(parsed, 'DocumentObject.ВозвратОтПокупателя'));
     const shippingDocs = toArray(findByKey(parsed, 'DocumentObject.ПогрузочныйЛист'));
     const transferDocs = toArray(findByKey(parsed, 'DocumentObject.ПеремещениеТоваров'));
@@ -857,6 +861,10 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
       ...toArray(findByKey(parsed, 'CatalogObject.Пользователи')),
       ...toArray(findByKey(parsed, 'CatalogObject.Сотрудники'))
     ];
+    console.log(
+     'AGENT CATALOGS:',
+     JSON.stringify(agentCatalogs, null, 2)
+    );
 
     const productMap = {};
     const warehouseMap = {};
