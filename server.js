@@ -599,22 +599,19 @@ app.get('/api/agents', requireAuth, (req, res) => {
     if (name) agents.add(name);
   });
 
-  db.salesInvoices.forEach(invoice => {
-    if (invoice.agent) agents.add(invoice.agent);
-  });
-
-  db.returnInvoices.forEach(invoice => {
-    if (invoice.agent) agents.add(invoice.agent);
-  });
-
   const result = Array.from(agents)
     .filter(name => {
-      const lower = String(name).toLowerCase();
+      const lower =
+       String(name).toLowerCase();
       return (
         name &&
+        name !== 'Не указан' &&
         !lower.includes('автообмен') &&
         !lower.includes('бухгалтер') &&
-        !lower.includes('оператор')
+        !lower.includes('оператор') &&
+        !lower.includes('администратор') &&
+        !lower.includes('изменил') &&
+        !lower.includes('пользователь')
       );
     })
     .map(name => ({ name }));
