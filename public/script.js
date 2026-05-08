@@ -829,7 +829,7 @@ btnImportDirectory.addEventListener('click', async () => {
       {
         method: 'POST',
           headers: {
-            Authorization: 'Bearer ' + token
+            Authorization: 'Bearer ' + localStorage.getItem('token')
           },
         body: formData
       }
