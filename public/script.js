@@ -82,7 +82,7 @@ async function apiFetch(url, options = {}) {
   };
 
   if (token) {
-    headers.Authorization = 'Bearer ' + token;
+    headers.Authorization = 'Bearer ' + localStorage.getItem('token');
   }
 
   const res = await fetch(API_BASE + url, {
@@ -106,14 +106,6 @@ loginForm.addEventListener('submit', async (e) => {
   const username = document.getElementById('login-username').value.trim();
   const password = document.getElementById('login-password').value.trim();
 
-  const data = await res.json();
-
-    token = data.token;
-      localStorage.setItem(
-      'token',
-      data.token
-    );
-
   try {
     const res = await apiFetch('/api/login', {
       method: 'POST',
@@ -123,7 +115,7 @@ loginForm.addEventListener('submit', async (e) => {
     token = res.token;
     currentUser = res.user;
 
-    localStorage.setItem('token', data.token);
+    localStorage.setItem('token', res.token);
     localStorage.setItem('user', JSON.stringify(currentUser));
 
     loginScreen.classList.add('hidden');
@@ -754,7 +746,7 @@ btnImportZip.addEventListener('click', async () => {
     const res = await fetch(API_BASE + '/api/import-1c-zip', {
       method: 'POST',
       headers: {
-        Authorization: token ? 'Bearer ' + token : ''
+        Authorization: 'Bearer ' + localStorage.getItem('token')
       },
       body: formData
     });
@@ -781,7 +773,7 @@ btnExportZip.addEventListener('click', async () => {
     const res = await fetch(API_BASE + '/api/export-1c-zip', {
       method: 'GET',
       headers: {
-        Authorization: token ? 'Bearer ' + token : ''
+        Authorization: 'Bearer ' + localStorage.getItem('token')
       }
     });
 
