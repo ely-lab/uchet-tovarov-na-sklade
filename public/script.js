@@ -106,6 +106,14 @@ loginForm.addEventListener('submit', async (e) => {
   const username = document.getElementById('login-username').value.trim();
   const password = document.getElementById('login-password').value.trim();
 
+  const data = await res.json();
+
+    token = data.token;
+      localStorage.setItem(
+      'token',
+      data.token
+    );
+
   try {
     const res = await apiFetch('/api/login', {
       method: 'POST',
@@ -115,7 +123,7 @@ loginForm.addEventListener('submit', async (e) => {
     token = res.token;
     currentUser = res.user;
 
-    localStorage.setItem('token', token);
+    localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(currentUser));
 
     loginScreen.classList.add('hidden');
@@ -817,15 +825,12 @@ btnImportDirectory.addEventListener('click', async () => {
     formData.append('type', directoryType.value);
 
     const res = await fetch(
-      '/api/import-directory',
+      API_BASE + '/api/import-directory',
       {
         method: 'POST',
-
-        headers: {
-          Authorization:
-            'Bearer ' + token
-        },
-
+          headers: {
+            Authorization: 'Bearer ' + token
+          },
         body: formData
       }
     );

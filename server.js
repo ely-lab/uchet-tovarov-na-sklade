@@ -808,11 +808,18 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
 
     // 👥 ПОИСК АГЕНТА ПО UUID
     function findAgentName(ref) {
-      if (!ref) {
-        return '';
+      if (!ref) { 
+        return ''; 
       }
       const found = db.agentDirectory.find(item => String(item.ref) === String(ref));
       return found?.name || '';
+    }
+
+    // 🏢 ПОИСК СКЛАДА ПО UUID
+    function findWarehouseName(ref) {
+      if (!ref) return 'Жалал-Абад';
+      const found = db.warehouseDirectory.find(item => String(item.ref) === String(ref));
+      return found?.name || ref;
     }
 
     // ✅ В XML реальные данные лежат глубже, поэтому ищем нужные объекты по всему XML
@@ -885,7 +892,7 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
     salesDocs.forEach(doc => {
       const number = doc.Number || doc.Номер || `РН-${Date.now()}`;
       const date = doc.Date || doc.Дата || new Date().toISOString();
-      const warehouse = getWarehouseName(doc.МестоХранения || doc.Склад);
+      const warehouse = findWarehouseName(getRef(doc.МестоХранения || doc.Склад || doc.СкладОтправитель || doc.СкладПолучатель));
       const customer = doc.Примечание || getCustomerName(doc.Получатель || doc.Контрагент || doc.Покупатель) || 'Не указан';
       const agent = getAgentName(doc.ТорговыйПредставитель || doc.Агент || doc.Экспедитор) || '';
 
@@ -926,7 +933,7 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
     returnDocs.forEach(doc => {
       const number = doc.Number || doc.Номер || `ВР-${Date.now()}`;
       const date = doc.Date || doc.Дата || new Date().toISOString();
-      const warehouse = getWarehouseName(doc.МестоХранения || doc.Склад);
+      const warehouse = findWarehouseName(getRef(doc.МестоХранения || doc.Склад || doc.СкладОтправитель || doc.СкладПолучатель));
       const customer = doc.Примечание || getCustomerName(doc.Получатель || doc.Контрагент || doc.Покупатель) || 'Не указан';
       const agent = getAgentName(doc.ТорговыйПредставитель || doc.Агент || doc.Экспедитор) || '';
       const sourceInvoiceId = getRef(doc.ДокОсн || doc.Основание || doc.ДокументОснование);
@@ -969,7 +976,7 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
     shippingDocs.forEach(doc => {
       const number = doc.Number || doc.Номер || `ПЛ-${Date.now()}`;
       const date = doc.Date || doc.Дата || new Date().toISOString();
-      const warehouse = getWarehouseName(doc.МестоХранения || doc.Склад);
+      const warehouse = findWarehouseName(getRef(doc.МестоХранения || doc.Склад || doc.СкладОтправитель || doc.СкладПолучатель));
       const driver = getAgentName(doc.Водитель || doc.Экспедитор || doc.Агент);
 
       const rows = getRows(doc).map(row => {
