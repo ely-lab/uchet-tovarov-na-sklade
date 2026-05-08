@@ -2,9 +2,10 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Учёт товаров на складе</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
 
@@ -31,9 +32,13 @@
   <div class="header-actions">
     <button class="secondary hidden" id="btn-back-menu">Назад</button>
     <button class="secondary hidden" id="btn-logout">Выйти</button>
+
     <button class="secondary hidden" id="btn-add-item">Добавить товар</button>
+    <button class="secondary hidden" id="btn-scan-barcode">Сканировать</button>
     <button class="secondary hidden" id="btn-inventory">Инвентаризация</button>
     <button class="secondary hidden" id="btn-transfer">Перемещение</button>
+
+    <button class="secondary hidden" id="btn-return-report">Отчёт</button>
   </div>
 </header>
 
@@ -43,19 +48,25 @@
   <button class="module-card" id="btn-module-warehouse">
     <span class="module-icon">📦</span>
     <span class="module-title">Склад</span>
-    <span class="module-text">Учёт товаров, остатки, списание, инвентаризация и перемещение</span>
+    <span class="module-text">Остатки, поиск, списание, инвентаризация, перемещение и сканер штрихкода</span>
   </button>
 
   <button class="module-card" id="btn-module-returns">
     <span class="module-icon">🔁</span>
     <span class="module-title">Возвраты</span>
-    <span class="module-text">Возврат товаров по накладным из базы 1С</span>
+    <span class="module-text">Возвраты по расходным накладным и просмотр возвратных накладных</span>
   </button>
 
   <button class="module-card" id="btn-module-registries">
     <span class="module-icon">📋</span>
     <span class="module-title">Реестры</span>
-    <span class="module-text">Погрузочные листы и документы для головного офиса</span>
+    <span class="module-text">Погрузочные листы, документы и данные для головного офиса</span>
+  </button>
+
+  <button class="module-card admin-only hidden" id="btn-module-import">
+    <span class="module-icon">📥</span>
+    <span class="module-title">Импорт</span>
+    <span class="module-text">Загрузка ZIP из 1С и экспорт изменений обратно для 1С</span>
   </button>
 </section>
 
@@ -103,25 +114,14 @@
 
     <div class="return-panel">
       <h2>Возвраты по накладным 1С</h2>
-      <p class="muted">Выберите накладную из базы и укажите количество товара для возврата.</p>
-
-      <div class="zip-upload-box">
-        <label class="file-upload">
-          Загрузить ZIP с накладными
-          <input id="invoice-zip-input" type="file" accept=".zip" />
-        </label>
-        <button class="primary" id="btn-upload-invoices">Импортировать накладные</button>
-        <p id="invoice-upload-message" class="message"></p>
-      </div>
-
-      <div id="invoice-list" class="invoice-list"></div>
+      <p class="muted">Здесь отображаются уже созданные накладные возврата.</p>
+      <div id="return-invoice-list" class="invoice-list"></div>
     </div>
 
     <div class="return-panel">
-      <h2>Состав накладной</h2>
-      <div id="invoice-details">
-        <p class="muted">Накладная не выбрана</p>
-      </div>
+      <h2>Расходные накладные</h2>
+      <p class="muted">Выберите расходную накладную, чтобы оформить возврат по её товарам.</p>
+      <div id="sales-invoice-list" class="invoice-list"></div>
     </div>
 
   </div>
@@ -130,14 +130,64 @@
 <section id="registries-section" class="hidden">
   <div class="return-panel">
     <h2>Реестры</h2>
-    <h3>Реестры погрузочных листов (1С)</h3>
+    <h3>Реестры погрузочных листов / документы 1С</h3>
     <div id="registry-list"></div>
+  </div>
+</section>
+
+<section id="import-section" class="hidden">
+  <div class="import-layout">
+    <div class="return-panel">
+      <h2>Импорт данных из 1С</h2>
+      <p class="muted">
+        Загрузите ZIP-архив с изменениями из 1С. Система обновит товары, расходные накладные,
+        возвраты, реестры и агентов.
+      </p>
+
+      <label class="file-upload">
+        Выбрать ZIP-архив
+        <input id="import-zip-input" type="file" accept=".zip" />
+      </label>
+
+      <button class="primary" id="btn-import-zip">Импортировать ZIP</button>
+      <p id="import-message" class="message"></p>
+    </div>
+
+    <div class="return-panel">
+      <h2>Экспорт для 1С</h2>
+      <p class="muted">
+        Сформируйте ZIP-архив с изменениями, сделанными в приложении, чтобы затем загрузить его обратно в 1С.
+      </p>
+
+      <button class="primary" id="btn-export-zip">Скачать ZIP для 1С</button>
+      <p class="muted">Файл будет скачан через браузер, после чего его можно сохранить в нужную папку.</p>
+    </div>
+    <div class="import-card">
+      <h3>Загрузка справочников</h3>
+      <p>
+        Загрузка Excel/CSV справочников товаров, покупателей, агентов и складов.
+      </p>
+      <input
+        type="file"
+        id="directory-file"
+        accept=".json,.csv,.xlsx"
+      />
+
+      <select id="directory-type">
+        <option value="products">Товары</option>
+        <option value="customers">Покупатели</option>
+        <option value="agents">Агенты</option>
+      </select>
+
+      <button class="primary" id="btn-import-directory">
+        Загрузить справочник
+     </button>
+    </div>
   </div>
 </section>
 
 <section id="add-section" class="modal hidden">
   <div class="modal-card">
-
     <button type="button" class="close-button" id="closeModal">×</button>
 
     <h2>Добавить товар</h2>
@@ -183,7 +233,59 @@
 
       <button type="submit" class="primary">Сохранить</button>
     </form>
+  </div>
+</section>
 
+<section id="scanner-section" class="modal hidden">
+  <div class="modal-card scanner-card">
+    <button type="button" class="close-button" id="closeScanner">×</button>
+    <h2>Сканирование штрихкода</h2>
+    <p class="muted">Наведите камеру на штрихкод товара.</p>
+    <div id="barcode-reader"></div>
+    <p id="scanner-message" class="message"></p>
+  </div>
+</section>
+
+<section id="return-report-section" class="modal hidden">
+  <div class="modal-card">
+    <button type="button" class="close-button" id="closeReturnReport">×</button>
+
+    <h2>Отчёт возврата от покупателя</h2>
+
+    <form id="return-report-form" class="item-form">
+      <label>
+        Агент
+        <select id="report-agent" required>
+          <option value="all">Все агенты</option>
+        </select>
+      </label>
+
+      <label>
+        Дата
+        <input id="report-date" type="date" required />
+      </label>
+
+      <label>
+        Сортировка
+        <select id="report-sort" required>
+          <option value="customer">По торговой точке</option>
+          <option value="product">По товару</option>
+          <option value="agent">По агенту</option>
+          <option value="date">По дате</option>
+        </select>
+      </label>
+
+      <button type="submit" class="primary">Сформировать отчёт</button>
+    </form>
+
+    <div id="return-report-result" class="report-result"></div>
+  </div>
+</section>
+
+<section id="document-modal" class="modal hidden">
+  <div class="modal-card document-modal-card">
+    <button type="button" class="close-button" id="closeDocumentModal">×</button>
+    <div id="document-modal-content"></div>
   </div>
 </section>
 
