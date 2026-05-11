@@ -1016,16 +1016,44 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
       const warehouse = findWarehouseName(getRef(doc.МестоХранения || doc.Склад || doc.СкладОтправитель || doc.СкладПолучатель));
       const driver = getAgentName(doc.Водитель || doc.Экспедитор || doc.Агент);
 
-      const rows = getRows(doc).map(row => {
-        const product = getProduct(row);
-        const quantity = Number(row.Количество || row.Quantity || 0);
+      const shippingRows = [
+        ...toArray(doc.Товары?.Строка),
+        ...toArray(doc.Товары),
+        ...toArray(doc.ТабличнаяЧасть),
+        ...toArray(doc.ТЧ),
+        ...toArray(doc.СписокТоваров),
+        ...toArray(doc.ТоварыНаСкладе),
+        ...toArray(doc.Продукция),
+        ...toArray(doc.Номенклатура)
+      ];
+
+      const rows = shippingRows.map(row => {
+        const product = getProduct({
+          ТМЦ:
+          row.ТМЦ ||
+          row.Номенклатура ||
+          row.Товар ||
+          row.НоменклатураСсылка ||
+          row.Product
+        });
+
+        const quantity = Number(
+          row.Количество ||
+          row.Quantity ||
+          row.Qty ||
+          0
+        );
 
         return {
           barcode: product.barcode,
-          name: product.name,
-          brand: product.brand,
-          quantity,
-          unit: product.unit
+          name:
+            row.Наименование ||
+            product.name,
+            brand: product.brand,
+            quantity,
+            unit:
+            row.Единица ||
+            product.unit
         };
       }).filter(item => item.quantity > 0);
 
