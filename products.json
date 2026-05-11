@@ -1,8 +1,15 @@
 [
   {
-    "ref": "9be2f573-1d9b-11de-9156-00030da3afc8",
+    "ref": "80052760-ref",
     "barcode": "80052760",
     "name": "Киндер Буено Т 2*30*1",
+    "brand": "Ferrero",
+    "unit": "шт"
+  },
+  {
+    "ref": "9be2f51d-1d9b-11de-9156-00030da3afc8",
+    "barcode": "40084077",
+    "name": "Киндер Maxi T-1*8*36",
     "brand": "Ferrero",
     "unit": "шт"
   },
@@ -140,14 +147,14 @@
     "unit": "шт"
   },
   {
-    "ref": "80050025-ref",
+    "ref": "9be2f573-1d9b-11de-9156-00030da3afc8",
     "barcode": "80050025",
     "name": "TIC-TAC апельсин",
     "brand": "Ferrero",
     "unit": "шт"
   },
   {
-    "ref": "8000500191712-ref",
+    "ref": "3dad3597-f4f7-11e2-9e86-782bcb425e04",
     "barcode": "8000500191712",
     "name": "TIC-TAC клубника",
     "brand": "Ferrero",
@@ -168,14 +175,14 @@
     "unit": "шт"
   },
   {
-    "ref": "80916611-ref",
+    "ref": "648dbbff-26a3-11ee-8756-0021279a2d09",
     "barcode": "80916611",
     "name": "TIC-TAC Цитрусовый Микс",
     "brand": "Ferrero",
     "unit": "шт"
   },
   {
-    "ref": "42378594-ref",
+    "ref": "2d5c32aa-3fd1-11e9-a206-902b34302c9a",
     "barcode": "42378594",
     "name": "TIC-TAC ягодный Микс",
     "brand": "Ferrero",
