@@ -114,21 +114,29 @@
 </section>
 
 <section id="returns-section" class="hidden">
-  <div class="return-layout">
 
-    <div class="return-panel">
-      <h2>Возвраты по накладным 1С</h2>
-      <p class="muted">Здесь отображаются уже созданные накладные возврата.</p>
-      <div id="return-invoice-list" class="invoice-list"></div>
-    </div>
+  <div class="returns-tabs">
+    <button class="returns-tab active" id="tab-return-invoices">
+      Возвратные накладные
+    </button>
 
-    <div class="return-panel">
-      <h2>Расходные накладные</h2>
-      <p class="muted">Выберите расходную накладную, чтобы оформить возврат по её товарам.</p>
-      <div id="sales-invoice-list" class="invoice-list"></div>
-    </div>
-
+    <button class="returns-tab" id="tab-sales-invoices">
+      Расходные накладные
+    </button>
   </div>
+
+  <div class="return-panel" id="return-invoices-panel">
+    <h2>Возвраты по накладным 1С</h2>
+    <p class="muted">Здесь отображаются уже созданные накладные возврата.</p>
+    <div id="return-invoice-list" class="invoice-list"></div>
+  </div>
+
+  <div class="return-panel hidden" id="sales-invoices-panel">
+    <h2>Расходные накладные</h2>
+    <p class="muted">Выберите расходную накладную, чтобы оформить возврат.</p>
+    <div id="sales-invoice-list" class="invoice-list"></div>
+  </div>
+
 </section>
 
 <section id="registries-section" class="hidden">

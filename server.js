@@ -873,33 +873,14 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
 
     // ✅ В XML реальные данные лежат глубже, поэтому ищем нужные объекты по всему XML
     const salesDocs = toArray(findByKey(parsed, 'DocumentObject.РасходнаяНакладная'));
-    console.log(
-     'SALES DOC SAMPLE:',
-     JSON.stringify(salesDocs[0], null, 2)
-    );
+    console.log('SALES DOC SAMPLE:', JSON.stringify(salesDocs[0], null, 2));
     const returnDocs = toArray(findByKey(parsed, 'DocumentObject.ВозвратОтПокупателя'));
     
-    const shippingDocs = [
-      ...toArray(findByKey(parsed, 'ПогрузочныйЛист')),
-      ...toArray(findByKey(parsed, 'Реестр')),
-      ...toArray(findByKey(parsed, 'РеестрПогрузки')),
-      ...toArray(findByKey(parsed, 'ЗаданиеНаОтбор')),
-      ...toArray(findByKey(parsed, 'ДокументПогрузки')),
-      ...toArray(findByKey(parsed, 'Погрузка')),
-      ...toArray(findByKey(parsed, 'МаршрутныйЛист'))
-    ];
-
+    const shippingDocs = toArray(findByKey(parsed, 'DocumentObject.ПогрузочныйЛист'));
     console.log('SHIPPING DOCS COUNT:', shippingDocs.length );
 
     if (shippingDocs[0]) {
-      console.log(
-        'FIRST SHIPPING DOC:',
-        JSON.stringify(
-          shippingDocs[0],
-          null,
-          2
-        )
-      );
+      console.log('FIRST SHIPPING DOC:', JSON.stringify( shippingDocs[0], null, 2));
     }
 
     const transferDocs = toArray(findByKey(parsed, 'DocumentObject.ПеремещениеТоваров'));

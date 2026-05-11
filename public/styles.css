@@ -846,3 +846,40 @@ textarea:focus {
     display: none;
   }
 }
+
+.returns-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.6rem;
+  border-radius: 1.2rem;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.returns-tab {
+  min-height: 48px;
+  border-radius: 0.9rem;
+  cursor: pointer;
+  font-weight: 800;
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.returns-tab.active {
+  color: white;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
+}
+
+@media (max-width: 640px) {
+  .returns-tabs {
+    position: sticky;
+    top: 0;
+    grid-template-columns: 1fr;
+  }
+}

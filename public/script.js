@@ -63,6 +63,11 @@ const directoryFile = document.getElementById('directory-file');
 const directoryType = document.getElementById('directory-type');
 const btnImportDirectory = document.getElementById('btn-import-directory');
 
+const tabReturnInvoices = document.getElementById('tab-return-invoices');
+const tabSalesInvoices = document.getElementById('tab-sales-invoices');
+const returnInvoicesPanel = document.getElementById('return-invoices-panel');
+const salesInvoicesPanel = document.getElementById('sales-invoices-panel');
+
 const API_BASE = 'https://uchet-tovarov-na-sklade.onrender.com';
 
 // 🔑 ДАННЫЕ
@@ -996,6 +1001,28 @@ btnBackMenu.addEventListener('click', () => {
 btnModuleWarehouse.addEventListener('click', () => showModule('warehouse'));
 btnModuleReturns.addEventListener('click', () => showModule('returns'));
 btnModuleRegistries.addEventListener('click', () => showModule('registries'));
+
+// 📑 ВКЛАДКИ ВОЗВРАТОВ
+tabReturnInvoices.addEventListener('click', () => {
+
+  tabReturnInvoices.classList.add('active');
+  tabSalesInvoices.classList.remove('active');
+
+  returnInvoicesPanel.classList.remove('hidden');
+  salesInvoicesPanel.classList.add('hidden');
+
+});
+
+tabSalesInvoices.addEventListener('click', () => {
+
+  tabSalesInvoices.classList.add('active');
+  tabReturnInvoices.classList.remove('active');
+
+  salesInvoicesPanel.classList.remove('hidden');
+  returnInvoicesPanel.classList.add('hidden');
+
+});
+
 
 if (btnModuleImport) {
   btnModuleImport.addEventListener('click', () => {
