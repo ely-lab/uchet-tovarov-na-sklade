@@ -1030,14 +1030,34 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
       const number = doc.Number || doc.Номер || `ПЛ-${Date.now()}`;
       const date = doc.Date || doc.Дата || new Date().toISOString();
       const warehouse = findWarehouseName(getRef(doc.МестоХранения || doc.Склад || doc.СкладОтправитель || doc.СкладПолучатель));
-      const driver = getAgentName(
+      const driverSource =
         doc.Водитель ||
         doc.Экспедитор ||
         doc.Агент ||
-        doc.Ответственный,
-        null,
-        2
-      );
+        doc.Ответственный ||
+        '';
+
+      const driverRef =
+        getRef(driverSource) ||
+        getRef(driverSource?.Ссылка) ||
+        getRef(driverSource?.Ref) ||
+        getRef(driverSource?.UUID) ||
+        getRef(driverSource?.id);
+
+      const driverFound =
+        db.agentDirectory.find(
+          item =>
+          String(item.ref).trim() ===
+          String(driverRef).trim()
+        );
+
+      const driver =
+        driverFound?.name ||
+        driverSource?.Description ||
+        driverSource?.Наименование ||
+        driverSource?.Name ||
+        driverRef ||
+        'Не указан';
 
       const shippingRows = [
         ...toArray(doc.тчТМЦ?.Row),
@@ -1059,6 +1079,11 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
       ];
 
       const rows = shippingRows.map(row => {
+        console.log(
+          'SHIPPING ROW:',
+          JSON.stringify(row, null, 2)
+        );
+
         const product = getProduct({
           ТМЦ:
           row.ТМЦ ||
