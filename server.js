@@ -856,7 +856,33 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
      JSON.stringify(salesDocs[0], null, 2)
     );
     const returnDocs = toArray(findByKey(parsed, 'DocumentObject.ВозвратОтПокупателя'));
-    const shippingDocs = toArray(findByKey(parsed, 'DocumentObject.ПогрузочныйЛист'));
+    
+    const shippingDocs = [
+      ...toArray(findByKey(parsed, 'ПогрузочныйЛист')),
+      ...toArray(findByKey(parsed, 'Реестр')),
+      ...toArray(findByKey(parsed, 'РеестрПогрузки')),
+      ...toArray(findByKey(parsed, 'ЗаданиеНаОтбор')),
+      ...toArray(findByKey(parsed, 'ДокументПогрузки')),
+      ...toArray(findByKey(parsed, 'Погрузка')),
+      ...toArray(findByKey(parsed, 'МаршрутныйЛист'))
+    ];
+
+    console.log(
+      'SHIPPING DOCS COUNT:',
+      shippingDocs.length
+    );
+
+    if (shippingDocs[0]) {
+      console.log(
+        'FIRST SHIPPING DOC:',
+        JSON.stringify(
+          shippingDocs[0],
+          null,
+          2
+        )
+      );
+    }
+
     const transferDocs = toArray(findByKey(parsed, 'DocumentObject.ПеремещениеТоваров'));
 
     const productCatalogs = [
