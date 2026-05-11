@@ -654,9 +654,38 @@ function openShippingList(doc) {
 
       </table>
     </div>
+
+    <button class="primary return-submit" onclick="toggleShippingCollected('${doc.id || doc.number || doc.registryNumber}')">
+      ${doc.collected ? 'Снять отметку “собран”' : 'Собран'}
+    </button>
   `;
 
   documentModal.classList.remove('hidden');
+}
+
+// ✅ СОБРАН / НЕ СОБРАН
+async function toggleShippingCollected(id) {
+
+  try {
+
+    await apiFetch(
+      `/api/registries/shipping-lists/${id}/collected`,
+      {
+        method: 'POST',
+        body: {}
+      }
+    );
+
+    documentModal.classList.add('hidden');
+
+    loadRegistries();
+
+    alert('Статус погрузочного листа обновлён');
+
+  } catch (err) {
+
+    alert(err.message);
+  }
 }
 
 // 🔁 ОФОРМИТЬ ВОЗВРАТ ПО РАСХОДНОЙ НАКЛАДНОЙ
@@ -862,7 +891,7 @@ async function loadRegistries() {
       el.className = 'card clickable';
 
       el.innerHTML = `
-        <h3>ПЛ №${r.number || r.registryNumber || r.id}</h3>
+        <h3>${r.collected ? '✅' : '⬜'} ПЛ №${r.number || r.registryNumber || r.id}</h3>
         <p><b>Дата:</b> ${r.date || '-'}</p>
         <p><b>Склад:</b> ${r.warehouse || '-'}</p>
         <p><b>Строк:</b> ${(r.items || []).length}</p>

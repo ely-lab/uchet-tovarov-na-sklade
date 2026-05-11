@@ -782,7 +782,7 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
         item => String(item.ref) === String(ref)
       );
 
-       return found?.name || agentMap[ref] || ref;
+      return found?.name || agentMap[ref] || ref;
     }
 
     function getProduct(row) {
@@ -1019,12 +1019,22 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
       const number = doc.Number || doc.Номер || `ПЛ-${Date.now()}`;
       const date = doc.Date || doc.Дата || new Date().toISOString();
       const warehouse = findWarehouseName(getRef(doc.МестоХранения || doc.Склад || doc.СкладОтправитель || doc.СкладПолучатель));
-      const driver = getAgentName(doc.Водитель || doc.Экспедитор || doc.Агент);
+      const driver = getAgentName(
+        doc.Водитель ||
+        doc.Экспедитор ||
+        doc.Агент ||
+        doc.Ответственный
+      );
 
       const shippingRows = [
+        ...toArray(doc.тчТМЦ?.Row),
+        ...toArray(doc.тчТМЦ),
+        ...toArray(doc.Товары?.Row),
         ...toArray(doc.Товары?.Строка),
         ...toArray(doc.Товары),
+        ...toArray(doc.ТабличнаяЧасть?.Row),
         ...toArray(doc.ТабличнаяЧасть),
+        ...toArray(doc.ТЧ?.Row),
         ...toArray(doc.ТЧ),
         ...toArray(doc.СписокТоваров),
         ...toArray(doc.ТоварыНаСкладе),
@@ -1062,6 +1072,10 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
         };
       }).filter(item => item.quantity > 0);
 
+      const oldDoc = db.shippingLists.find(
+        i => String(i.number || i.registryNumber) === String(number)
+      );
+
       const shippingObject = {
         id: number,
         number,
@@ -1070,6 +1084,8 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
         warehouse,
         date,
         items: rows,
+        collected: oldDoc?.collected || false,
+        collectedAt: oldDoc?.collectedAt || null,
         source: '1c'
       };
 
@@ -1402,6 +1418,37 @@ app.post(
     }
   }
 );
+
+// ✅ ОТМЕТИТЬ ПОГРУЗОЧНЫЙ ЛИСТ КАК СОБРАННЫЙ
+app.post('/api/registries/shipping-lists/:id/collected', requireAuth, (req, res) => {
+  const id = req.params.id;
+
+  const doc = db.shippingLists.find(item =>
+    String(item.id) === String(id) ||
+    String(item.number) === String(id) ||
+    String(item.registryNumber) === String(id)
+  );
+
+  if (!doc) {
+    return res.status(404).json({
+      error: 'Погрузочный лист не найден'
+    });
+  }
+
+  doc.collected = !doc.collected;
+  doc.collectedAt = doc.collected ? new Date().toISOString() : null;
+  doc.collectedBy = doc.collected ? req.user.username : null;
+
+  addHistory({
+    action: 'shipping_collected',
+    user: req.user.username,
+    text: `${doc.collected ? 'Собран' : 'Снят статус сборки'} погрузочный лист №${doc.number || doc.registryNumber || doc.id}`
+  });
+
+  saveDB(db);
+
+  res.json(doc);
+});
 
 // 🚀 СТАРТ
 app.listen(PORT, () => {
