@@ -797,37 +797,54 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
     }
 
     function getProduct(row) {
-      const ref = getRef(
-        row.Номенклатура ||
-        row.Товар ||
-        row.ТМЦ ||
-        row.Product
-      );
 
-    // 🔍 ищем товар по oneCRef
-    const found = db.items.find(item =>
-      String(item.oneCRef).trim() === String(ref).trim()
-    );
+  const ref = getRef(
+    row?.ТМЦ ||
+    row?.Номенклатура ||
+    row?.Товар ||
+    row?.Product ||
+    row?.НоменклатураСсылка ||
+    row
+  );
 
-    // ✅ если нашли товар в базе
-    if (found) {
+  const directoryProduct = db.productDirectory.find(item =>
+    String(item.ref || '').trim() === String(ref).trim()
+  );
 
-      return {
-        barcode: found.barcode || '',
-        name: found.name || 'Без названия',
-        brand: found.brand || 'Без бренда',
-        unit: found.unit || 'шт'
-      };
-    }
+  const itemFromDB = db.items.find(item =>
+    String(item.oneCRef || '').trim() === String(ref).trim() ||
+    String(item.barcode || '').trim() === String(ref).trim() ||
+    String(item.id || '').trim() === String(ref).trim()
+  );
 
-    // ❌ fallback если товар не найден
-    return {
-      barcode: ref || '',
-      name: ref || 'Не найден',
-      brand: 'Без бренда',
-      unit: 'шт'
-    };
-    }
+  if (itemFromDB && !itemFromDB.oneCRef) {
+    itemFromDB.oneCRef = ref;
+  }
+
+  return {
+    ref,
+
+    barcode:
+      directoryProduct?.barcode ||
+      itemFromDB?.barcode ||
+      ref,
+
+    name:
+      directoryProduct?.name ||
+      itemFromDB?.name ||
+      ref,
+
+    brand:
+      directoryProduct?.brand ||
+      itemFromDB?.brand ||
+      'Без бренда',
+
+    unit:
+      directoryProduct?.unit ||
+      itemFromDB?.unit ||
+      'шт'
+  };
+}
 
     // 👤 ПОИСК ПОКУПАТЕЛЯ ПО UUID
     function findCustomerName(ref, fallback = '') {
@@ -1090,19 +1107,14 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
       const shippingRows = [
         ...toArray(doc.тчТМЦ?.Row),
         ...toArray(doc.тчТМЦ),
-
         ...toArray(doc.Товары?.Row),
         ...toArray(doc.Товары?.Строка),
         ...toArray(doc.Товары),
-
         ...toArray(doc.ТабличнаяЧасть?.Row),
         ...toArray(doc.ТабличнаяЧасть),
-
         ...toArray(doc.ТЧ?.Row),
         ...toArray(doc.ТЧ),
-
         ...toArray(doc.СписокТоваров),
-
         ...toArray(doc.Номенклатура)
       ];
 
