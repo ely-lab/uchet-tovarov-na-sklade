@@ -757,9 +757,20 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
 
     function getRef(value) {
       if (!value) return '';
-      if (typeof value === 'string') return value;
-      if (typeof value === 'object') return value['#text'] || value.Ref || value.ref || '';
-      return String(value);
+      if (typeof value === 'string') {
+        return value.trim();
+      }
+
+      return (
+        value.Ref ||
+        value.ref ||
+        value.Ссылка ||
+        value.ID ||
+        value.id ||
+        value.uuid ||
+        value.UUID ||
+        ''
+      );
     }
 
     function getWarehouseName(value) {
@@ -1023,22 +1034,27 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
         doc.Водитель ||
         doc.Экспедитор ||
         doc.Агент ||
-        doc.Ответственный
+        doc.Ответственный,
+        null,
+        2
       );
 
       const shippingRows = [
         ...toArray(doc.тчТМЦ?.Row),
         ...toArray(doc.тчТМЦ),
+
         ...toArray(doc.Товары?.Row),
         ...toArray(doc.Товары?.Строка),
         ...toArray(doc.Товары),
+
         ...toArray(doc.ТабличнаяЧасть?.Row),
         ...toArray(doc.ТабличнаяЧасть),
+
         ...toArray(doc.ТЧ?.Row),
         ...toArray(doc.ТЧ),
+
         ...toArray(doc.СписокТоваров),
-        ...toArray(doc.ТоварыНаСкладе),
-        ...toArray(doc.Продукция),
+
         ...toArray(doc.Номенклатура)
       ];
 
