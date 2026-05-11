@@ -594,16 +594,16 @@ app.get('/api/registries/shipping-lists', requireAuth, (req, res) => {
 app.get('/api/agents', requireAuth, (req, res) => {
   const agents = new Set();
 
-  db.agents.forEach(agent => {
+  db.agentDirectory.forEach(agent => {
     const name =
-      agent.name ||
-      agent.agent ||
-      agent.expeditor ||
-      agent.driver ||
-      '';
+     agent.name ||
+     agent.agent ||
+     agent.expeditor ||
+     agent.driver ||
+     '';
 
     if (name) {
-      agents.add(name);
+     agents.add(name);
     }
   });
 
@@ -776,8 +776,13 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
 
     function getAgentName(value) {
       const ref = getRef(value);
-      if (!ref) return 'Не указан';
-      return agentMap[ref] || ref;
+      if (!ref) return '';
+
+      const found = db.agentDirectory.find(
+        item => String(item.ref) === String(ref)
+      );
+
+       return found?.name || agentMap[ref] || ref;
     }
 
     function getProduct(row) {
