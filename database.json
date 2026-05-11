@@ -10,7 +10,7 @@
       "createdAt": "2026-04-20T08:00:00.000Z",
       "updatedAt": "2026-04-28T05:19:11.331Z",
       "unit": "шт",
-      "oneCRef": "9be2f573-1d9b-11de-9156-00030da3afc8"
+      "oneCRef": "9be2f557-1d9b-11de-9156-00030da3afc8"
     },
     {
       "id": 1776682471930,
@@ -229,7 +229,8 @@
       "quantity": 562,
       "unit": "шт",
       "createdAt": "2026-04-28T04:17:56.601Z",
-      "updatedAt": "2026-04-28T05:19:11.285Z"
+      "updatedAt": "2026-04-28T05:19:11.285Z",
+      "oneCRef": "9be2f573-1d9b-11de-9156-00030da3afc8"
     },
     {
       "id": 1777349877209,
@@ -240,7 +241,8 @@
       "quantity": 701,
       "unit": "шт",
       "createdAt": "2026-04-28T04:17:56.619Z",
-      "updatedAt": "2026-04-28T05:19:11.289Z"
+      "updatedAt": "2026-04-28T05:19:11.289Z",
+      "oneCRef": "3dad3597-f4f7-11e2-9e86-782bcb425e04"
     },
     {
       "id": 1777349876843,
@@ -273,7 +275,8 @@
       "quantity": 622,
       "unit": "шт",
       "createdAt": "2026-04-28T04:17:56.639Z",
-      "updatedAt": "2026-04-28T05:19:11.302Z"
+      "updatedAt": "2026-04-28T05:19:11.302Z",
+      "oneCRef": "648dbbff-26a3-11ee-8756-0021279a2d09"
     },
     {
       "id": 1777349877158,
@@ -284,7 +287,8 @@
       "quantity": 440,
       "unit": "шт",
       "createdAt": "2026-04-28T04:17:56.646Z",
-      "updatedAt": "2026-04-28T05:19:11.306Z"
+      "updatedAt": "2026-04-28T05:19:11.306Z",
+      "oneCRef": "2d5c32aa-3fd1-11e9-a206-902b34302c9a"
     },
     {
       "id": 1777349877449,
@@ -317,7 +321,8 @@
       "quantity": 1226,
       "unit": "шт",
       "createdAt": "2026-04-28T04:17:56.657Z",
-      "updatedAt": "2026-04-28T05:19:11.323Z"
+      "updatedAt": "2026-04-28T05:19:11.323Z",
+      "oneCRef": "e6fbd04f-de8e-11e9-b046-782bcb425e04"
     },
     {
       "id": 1777349876746,
@@ -2803,7 +2808,8 @@
       "brand": "Ferrero",
       "quantity": 2294,
       "unit": "шт",
-      "createdAt": "2026-04-28T05:19:11.318Z"
+      "createdAt": "2026-04-28T05:19:11.318Z",
+      "oneCRef": "9be2f51d-1d9b-11de-9156-00030da3afc8"
     },
     {
       "id": 1777353552076,
@@ -10092,18 +10098,6 @@
       "createdAt": "2026-05-08T04:35:36.383Z",
       "updatedAt": "2026-05-08T04:35:36.383Z",
       "oneCRef": "9be2f557-1d9b-11de-9156-00030da3afc8"
-    },
-    {
-      "id": 1778214936383.9333,
-      "name": "9be2f51d-1d9b-11de-9156-00030da3afc8",
-      "barcode": "9be2f51d-1d9b-11de-9156-00030da3afc8",
-      "brand": "Без бренда",
-      "quantity": 1440,
-      "unit": "шт",
-      "warehouse": "459f5137-247e-11e1-9434-001517af41d5",
-      "createdAt": "2026-05-08T04:35:36.383Z",
-      "updatedAt": "2026-05-08T04:35:36.383Z",
-      "oneCRef": "9be2f51d-1d9b-11de-9156-00030da3afc8"
     },
     {
       "id": 1778214936383.8464,
@@ -25628,8 +25622,19 @@
   "shippingLists": [],
   "productDirectory": [],
   "customerDirectory": [],
-  "agentDirectory": [
+  "agentDirectory": [],
+  "warehouseDirectory": [
   {
+    "ref": "459f5137-247e-11e1-9434-001517af41d5",
+    "name": "Жалал-Абад"
+  },
+  {
+    "ref": "a50612ed-6dcd-11e1-b9b2-001966ba492d",
+    "name": "Жалал-Абад"
+  }
+  ],
+  "agents": [
+    {
     "ref": "f14d1649-ba8a-11e9-9677-50e549ef4a82",
     "name": "Амираев Усон"
   },
@@ -25810,8 +25815,11 @@
     "name": "Шерматова Нурзат"
   }
   ],
-  "warehouseDirectory": [],
-  "agents": [],
-  "customers": [],
+  "customers": [
+    {
+    "ref": "108a2bb0-4e33-11ee-96e1-0021279a2d09",
+    "name": "Азия73"
+  }
+  ],
   "exportChanges": []
 }

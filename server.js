@@ -797,31 +797,36 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
     }
 
     function getProduct(row) {
-      const ref = getRef(row?.ТМЦ || row?.Номенклатура || row?.Товар);
-      const product = productMap[ref];
+      const ref = getRef(
+        row.Номенклатура ||
+        row.Товар ||
+        row.ТМЦ ||
+        row.Product
+      );
 
-      const directoryProduct = db.productDirectory.find(item => String(item.ref) === String(ref));
+    // 🔍 ищем товар по oneCRef
+    const found = db.items.find(item =>
+      String(item.oneCRef).trim() === String(ref).trim()
+    );
 
-      const itemFromDB = db.items.find(item =>
-        String(item.barcode) === String(ref) ||
-        String(item.id) === String(ref) ||
-        String(item.oneCRef || '') === String(ref)
-      )
-      if (
-        itemFromDB &&
-        !itemFromDB.oneCRef
-      ) 
-      {
-        itemFromDB.oneCRef = ref;
-      };
- 
+    // ✅ если нашли товар в базе
+    if (found) {
+
       return {
-        ref,
-        barcode: directoryProduct?.barcode || product?.barcode || itemFromDB?.barcode || ref,
-        name: directoryProduct?.name || product?.name || itemFromDB?.name || ref,
-        brand: directoryProduct?.brand || product?.brand || itemFromDB?.brand || 'Без бренда',
-        unit: directoryProduct?.unit || product?.unit || itemFromDB?.unit || 'шт'
+        barcode: found.barcode || '',
+        name: found.name || 'Без названия',
+        brand: found.brand || 'Без бренда',
+        unit: found.unit || 'шт'
       };
+    }
+
+    // ❌ fallback если товар не найден
+    return {
+      barcode: ref || '',
+      name: ref || 'Не найден',
+      brand: 'Без бренда',
+      unit: 'шт'
+    };
     }
 
     // 👤 ПОИСК ПОКУПАТЕЛЯ ПО UUID
@@ -867,10 +872,7 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
       ...toArray(findByKey(parsed, 'МаршрутныйЛист'))
     ];
 
-    console.log(
-      'SHIPPING DOCS COUNT:',
-      shippingDocs.length
-    );
+    console.log('SHIPPING DOCS COUNT:', shippingDocs.length );
 
     if (shippingDocs[0]) {
       console.log(
