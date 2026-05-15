@@ -899,18 +899,20 @@ textarea:focus {
 }
 
 @media (max-width: 768px) {
-
   .document-filters {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
   }
 
   .document-filters input[type="search"] {
-    min-width: 220px;
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
   }
 
   .document-filters input[type="date"] {
-    min-width: 145px;
+    width: 100%;
+    min-width: 0;
   }
 }
