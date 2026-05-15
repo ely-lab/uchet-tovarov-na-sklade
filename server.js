@@ -1021,7 +1021,15 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
       ) || '';
 
       const rows = getRows(doc).map(row => {
-        const product = getProduct(row);
+        const product = getProduct({
+          ТМЦ:
+          row.ТМЦ ||
+          row.Номенклатура ||
+          row.Товар ||
+          row.НоменклатураСсылка ||
+          row.Product
+        });
+
         const quantity = Number(row.Количество || row.Quantity || 0);
 
         return {
@@ -1074,7 +1082,15 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
       const sourceInvoiceId = getRef(doc.ДокОсн || doc.Основание || doc.ДокументОснование);
 
       const rows = getRows(doc).map(row => {
-        const product = getProduct(row);
+        const product = getProduct({
+          ТМЦ:
+          row.ТМЦ ||
+          row.Номенклатура ||
+          row.Товар ||
+          row.НоменклатураСсылка ||
+          row.Product
+        });
+
         const quantity = Number(row.Количество || row.Quantity || 0);
 
         return {
