@@ -11,10 +11,12 @@ const registriesSection = document.getElementById('registries-section');
 const importSection = document.getElementById('import-section');
 
 const returnsSearch = document.getElementById('returns-search');
-const returnsDate = document.getElementById('returns-date');
+const returnsDateFrom = document.getElementById('returns-date-from');
+const returnsDateTo = document.getElementById('returns-date-to');
 
 const registrySearch = document.getElementById('registry-search');
-const registryDate = document.getElementById('registry-date');
+const registryDateFrom = document.getElementById('registry-date-from');
+const registryDateTo = document.getElementById('registry-date-to');
 
 const inventoryContainer = document.getElementById('inventory');
 const searchInput = document.getElementById('search');
@@ -888,13 +890,9 @@ btnImportDirectory.addEventListener('click', async () => {
 
 function filterRegistries(list) {
 
-  const q =
-    registrySearch?.value
-      ?.trim()
-      .toLowerCase() || '';
-
-  const date =
-    registryDate?.value || '';
+  const q = registrySearch?.value?.trim().toLowerCase() || '';
+  const from = registryDateFrom?.value || '';
+  const to = registryDateTo?.value || '';
 
   return list.filter(doc => {
 
@@ -921,12 +919,12 @@ function filterRegistries(list) {
         .toLowerCase()
         .includes(q);
 
+    const docDate =
+      String(doc.date || '').slice(0, 10);
+
     const matchesDate =
-
-      !date ||
-
-      String(doc.date || '')
-        .startsWith(date);
+      (!from || docDate >= from) &&
+      (!to || docDate <= to);
 
     return matchesText && matchesDate;
   });
@@ -1028,8 +1026,15 @@ if (registrySearch) {
   );
 }
 
-if (registryDate) {
-  registryDate.addEventListener(
+if (registryDateFrom) {
+  registryDateFrom.addEventListener(
+    'change',
+    renderRegistries
+  );
+}
+
+if (registryDateTo) {
+  registryDateTo.addEventListener(
     'change',
     renderRegistries
   );
@@ -1167,7 +1172,8 @@ if (token && currentUser) {
 
 function filterDocumentsBySearchAndDate(list) {
   const q = returnsSearch?.value.trim().toLowerCase() || '';
-  const date = returnsDate?.value || '';
+  const from = returnsDateFrom?.value || '';
+  const to = returnsDateTo?.value || '';
 
   return list.filter(doc => {
     const number =
@@ -1185,9 +1191,12 @@ function filterDocumentsBySearchAndDate(list) {
       String(number).toLowerCase().includes(q) ||
       String(manager).toLowerCase().includes(q);
 
+    const docDate =
+      String(doc.date || '').slice(0, 10);
+
     const matchesDate =
-      !date ||
-      String(doc.date || '').startsWith(date);
+      (!from || docDate >= from) &&
+      (!to || docDate <= to);
 
     return matchesText && matchesDate;
   });
@@ -1200,9 +1209,12 @@ if (returnsSearch) {
   });
 }
 
-if (returnsDate) {
-  returnsDate.addEventListener('change', () => {
-    renderReturnInvoices();
-    renderSalesInvoices();
-  });
+if (returnsDateFrom) {
+  returnsDateFrom.addEventListener(
+    'change',
+    () => {
+      renderReturnInvoices();
+      renderSalesInvoices();
+    }
+  );
 }
