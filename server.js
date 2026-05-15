@@ -260,10 +260,7 @@ app.post('/api/items', requireAuth, (req, res) => {
     });
   }
 
-  const warehouse =
-    req.user.role === 'head_office'
-      ? 'Жалал-Абад'
-      : req.user.warehouse;
+  const warehouse = req.user.warehouse;
 
   const item = {
     id: Date.now(),
@@ -297,7 +294,7 @@ app.post('/api/items', requireAuth, (req, res) => {
 });
 
 // 🔻 СПИСАНИЕ
-app.post('/api/items/:id/writeoff', requireAuth, (req, res) => {
+app.post('/api/items/:id/writeoff', requireAuth, requireBranchWorker, (req, res) => {
   const id = Number(req.params.id);
   const { amount } = req.body;
 
@@ -346,7 +343,7 @@ app.post('/api/items/:id/writeoff', requireAuth, (req, res) => {
 });
 
 // 📋 ИНВЕНТАРИЗАЦИЯ
-app.post('/api/inventory/recount', requireAuth, (req, res) => {
+app.post('/api/inventory/recount', requireAuth, requireBranchWorker, (req, res) => {
   const {
     barcode,
     countedQty
@@ -390,17 +387,14 @@ app.post('/api/inventory/recount', requireAuth, (req, res) => {
 });
 
 // 🔄 ПЕРЕМЕЩЕНИЕ
-app.post('/api/transfers', requireAuth, (req, res) => {
+app.post('/api/transfers', requireAuth, requireBranchWorker, (req, res) => {
   const {
     barcode,
     toWarehouse,
     amount
   } = req.body;
 
-  const fromWarehouse =
-    req.user.role === 'head_office'
-      ? req.body.fromWarehouse || 'Жалал-Абад'
-      : req.user.warehouse;
+  const fromWarehouse = req.user.warehouse;
 
   const item = db.items.find(
     i =>
@@ -491,7 +485,7 @@ app.get('/api/returns-page-data', requireAuth, (req, res) => {
 });
 
 // 🔁 СОЗДАНИЕ ВОЗВРАТА
-app.post('/api/returns/from-sales-invoice', requireAuth, (req, res) => {
+app.post('/api/returns/from-sales-invoice', requireAuth, requireBranchWorker, (req, res) => {
   const {
     salesInvoiceId,
     items
@@ -508,12 +502,19 @@ app.post('/api/returns/from-sales-invoice', requireAuth, (req, res) => {
     });
   }
 
+  if (salesInvoice.warehouse !== req.user.warehouse) {
+    return res.status(403).json({
+      error: 'Нельзя работать с накладной другого филиала'
+    });
+  }
+
   const returnInvoice = {
     id: Date.now(),
     sourceInvoiceId: salesInvoice.id,
     customer: salesInvoice.customer,
     warehouse: salesInvoice.warehouse,
-    agent: salesInvoice.agent,
+    manager: salesInvoice.manager || salesInvoice.agent || '',
+    agent: salesInvoice.manager || salesInvoice.agent || '',
     date: new Date().toISOString().slice(0, 10),
     items: []
   };
@@ -590,31 +591,44 @@ app.get('/api/registries/shipping-lists', requireAuth, (req, res) => {
 }
 );
 
-// 👥 АГЕНТЫ / ЭКСПЕДИТОРЫ
-app.get('/api/agents', requireAuth, (req, res) => {
-  const agents = new Set();
+// 👥 МЕНЕДЖЕРЫ
+app.get('/api/managers', requireAuth, (req, res) => {
+  const managers = new Set();
 
-  db.agentDirectory.forEach(agent => {
-    const name =
-     agent.name ||
-     agent.agent ||
-     agent.expeditor ||
-     agent.driver ||
-     '';
-
-    if (name) {
-     agents.add(name);
-    }
+  db.agentDirectory.forEach(item => {
+    const name = item.name || item.manager || item.agent || '';
+    if (name) managers.add(name);
   });
 
-  // 🚚 Водитель в погрузочном листе = экспедитор
+  const result = Array.from(managers)
+    .filter(name => {
+      const lower = String(name).toLowerCase();
+
+      return (
+        name &&
+        name !== 'Не указан' &&
+        !lower.includes('автообмен') &&
+        !lower.includes('бухгалтер') &&
+        !lower.includes('оператор') &&
+        !lower.includes('администратор') &&
+        !lower.includes('пользователь')
+      );
+    })
+    .map(name => ({ name }));
+
+  res.json(result);
+});
+
+// 🚚 ЭКСПЕДИТОРЫ / ВОДИТЕЛИ
+app.get('/api/expeditors', requireAuth, (req, res) => {
+  const expeditors = new Set();
+
   db.shippingLists.forEach(doc => {
-    if (doc.driver) {
-      agents.add(doc.driver);
-    }
+    if (doc.driver) expeditors.add(doc.driver);
+    if (doc.expeditor) expeditors.add(doc.expeditor);
   });
 
-  const result = Array.from(agents)
+  const result = Array.from(expeditors)
     .filter(name => {
       const lower = String(name).toLowerCase();
 
@@ -635,9 +649,8 @@ app.get('/api/agents', requireAuth, (req, res) => {
 
 // 📊 ОТЧЁТ ВОЗВРАТОВ
 app.get('/api/reports/returns', requireAuth, (req, res) => {
-
   const {
-    agent,
+    manager,
     date,
     sort
   } = req.query;
@@ -651,7 +664,8 @@ app.get('/api/reports/returns', requireAuth, (req, res) => {
       rows.push({
         date: invoice.date,
         customer: invoice.customer,
-        agent: invoice.agent,
+        manager: invoice.manager || invoice.agent || '',
+        agent: invoice.manager || invoice.agent || '',
         name: item.name,
         quantity: item.quantity,
         unit: item.unit
@@ -659,8 +673,10 @@ app.get('/api/reports/returns', requireAuth, (req, res) => {
     }
   }
 
-  if (agent && agent !== 'all') {
-    rows = rows.filter(r => r.agent === agent);
+  if (manager && manager !== 'all') {
+    rows = rows.filter(r =>
+      (r.manager || r.agent || '') === manager
+    );
   }
 
   if (date) {
@@ -679,11 +695,21 @@ app.get('/api/reports/returns', requireAuth, (req, res) => {
     );
   }
 
-  if (sort === 'agent') {
-    rows.sort((a, b) =>
-      a.agent.localeCompare(b.agent)
-    );
-  }
+  if (sort === 'manager') {
+  rows.sort((a, b) =>
+    String(
+      a.manager ||
+      a.agent ||
+      ''
+    ).localeCompare(
+      String(
+        b.manager ||
+        b.agent ||
+        ''
+      )
+    )
+  );
+}
 
   if (sort === 'date') {
     rows.sort((a, b) =>
@@ -775,7 +801,7 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
 
     function getWarehouseName(value) {
       const ref = getRef(value);
-      if (!ref) return 'Жалал-Абад';
+      if (!ref) return 'Не указан';
       return warehouseMap[ref] || ref;
     }
 
@@ -866,8 +892,12 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
 
     // 🏢 ПОИСК СКЛАДА ПО UUID
     function findWarehouseName(ref) {
-      if (!ref) return 'Жалал-Абад';
-      const found = db.warehouseDirectory.find(item => String(item.ref) === String(ref));
+      if (!ref) return 'Не указан';
+      const found = db.warehouseDirectory.find(
+        item =>
+          String(item.ref).trim() ===
+          String(ref).trim()
+      );
       return found?.name || ref;
     }
 
@@ -971,9 +1001,24 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
     salesDocs.forEach(doc => {
       const number = doc.Number || doc.Номер || `РН-${Date.now()}`;
       const date = doc.Date || doc.Дата || new Date().toISOString();
-      const warehouse = findWarehouseName(getRef(doc.МестоХранения || doc.Склад || doc.СкладОтправитель || doc.СкладПолучатель));
-      const customer = doc.Примечание || getCustomerName(doc.Получатель || doc.Контрагент || doc.Покупатель) || 'Не указан';
-      const agent = getAgentName(doc.ТорговыйПредставитель || doc.Агент || doc.Экспедитор) || '';
+      
+      const warehouse = findWarehouseName(
+        getRef(
+          doc.МестоХранения || 
+          doc.Склад || 
+          doc.СкладОтправитель || 
+          doc.СкладПолучатель
+        )
+      );
+
+      const customer = getCustomerName(doc.Получатель || doc.Контрагент || doc.Покупатель) || 'Не указан';
+
+      const manager = getAgentName(
+        doc.Менеджер ||
+        doc.ТорговыйПредставитель ||
+        doc.Агент ||
+        doc.Ответственный
+      ) || '';
 
       const rows = getRows(doc).map(row => {
         const product = getProduct(row);
@@ -988,11 +1033,12 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
         };
       }).filter(item => item.quantity > 0);
 
-      const invoiceObject = {
+      const salesObject = {
         id: number,
         invoiceNumber: number,
         customer,
-        agent,
+        manager, 
+        agent: manager,
         warehouse,
         date,
         items: rows
@@ -1001,9 +1047,10 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
       const index = db.salesInvoices.findIndex(i => String(i.invoiceNumber) === String(number));
 
       if (index >= 0) {
-        db.salesInvoices[index] = invoiceObject;
-      } else {
-        db.salesInvoices.push(invoiceObject);
+        db.salesInvoices[index] = salesObject;
+      } 
+      else {
+        db.salesInvoices.push(salesObject);
         importedSalesInvoices++;
       }
     });
@@ -1012,9 +1059,18 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
     returnDocs.forEach(doc => {
       const number = doc.Number || doc.Номер || `ВР-${Date.now()}`;
       const date = doc.Date || doc.Дата || new Date().toISOString();
-      const warehouse = findWarehouseName(getRef(doc.МестоХранения || doc.Склад || doc.СкладОтправитель || doc.СкладПолучатель));
+
+      const warehouse = findWarehouseName(
+        getRef(
+          doc.МестоХранения || 
+          doc.Склад || 
+          doc.СкладОтправитель || 
+          doc.СкладПолучатель
+        )
+      );
+
       const customer = doc.Примечание || getCustomerName(doc.Получатель || doc.Контрагент || doc.Покупатель) || 'Не указан';
-      const agent = getAgentName(doc.ТорговыйПредставитель || doc.Агент || doc.Экспедитор) || '';
+      const manager = getAgentName(doc.Менеджер || doc.ТорговыйПредставитель || doc.Агент || doc.Ответственный) || '';
       const sourceInvoiceId = getRef(doc.ДокОсн || doc.Основание || doc.ДокументОснование);
 
       const rows = getRows(doc).map(row => {
@@ -1035,7 +1091,8 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
         returnNumber: number,
         sourceInvoiceId,
         customer,
-        agent,
+        manager,
+        agent: manager,
         warehouse,
         date,
         items: rows
@@ -1055,7 +1112,15 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
     shippingDocs.forEach(doc => {
       const number = doc.Number || doc.Номер || `ПЛ-${Date.now()}`;
       const date = doc.Date || doc.Дата || new Date().toISOString();
-      const warehouse = findWarehouseName(getRef(doc.МестоХранения || doc.Склад || doc.СкладОтправитель || doc.СкладПолучатель));
+      const warehouse = findWarehouseName(
+        getRef(
+          doc.МестоХранения || 
+          doc.Склад || 
+          doc.СкладОтправитель || 
+          doc.СкладПолучатель
+        )
+      );
+      
       const driverSource =
         doc.Водитель ||
         doc.Экспедитор ||
@@ -1143,6 +1208,7 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
         number,
         registryNumber: number,
         driver,
+        expeditor: driver,
         warehouse,
         date,
         items: rows,
@@ -1300,11 +1366,7 @@ app.get(
 );
 
 // 📚 ИМПОРТ СПРАВОЧНИКОВ
-app.post(
-  '/api/import-directory',
-  requireAuth,
-  requireAdmin,
-  upload.single('file'),
+app.post( '/api/import-directory', requireAuth, requireAdmin, upload.single('file'),
   async (req, res) => {
 
     try {
@@ -1481,8 +1543,17 @@ app.post(
   }
 );
 
+function requireBranchWorker(req, res, next) {
+  if (req.user.role === 'head_office') {
+    return res.status(403).json({
+      error: 'Администратор может только просматривать документы'
+    });
+  }
+  next();
+}
+
 // ✅ ОТМЕТИТЬ ПОГРУЗОЧНЫЙ ЛИСТ КАК СОБРАННЫЙ
-app.post('/api/registries/shipping-lists/:id/collected', requireAuth, (req, res) => {
+app.post('/api/registries/shipping-lists/:id/collected', requireAuth, requireBranchWorker, (req, res) => {
   const id = req.params.id;
 
   const doc = db.shippingLists.find(item =>

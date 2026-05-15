@@ -10,6 +10,12 @@ const returnsSection = document.getElementById('returns-section');
 const registriesSection = document.getElementById('registries-section');
 const importSection = document.getElementById('import-section');
 
+const returnsSearch = document.getElementById('returns-search');
+const returnsDate = document.getElementById('returns-date');
+
+const registrySearch = document.getElementById('registry-search');
+const registryDate = document.getElementById('registry-date');
+
 const inventoryContainer = document.getElementById('inventory');
 const searchInput = document.getElementById('search');
 const filterBrand = document.getElementById('filter-brand');
@@ -79,6 +85,7 @@ let salesInvoices = [];
 let returnInvoices = [];
 let selectedSalesInvoice = null;
 let scanner = null;
+let registries = [];
 
 // 📡 API
 async function apiFetch(url, options = {}) {
@@ -175,7 +182,7 @@ function showModule(name) {
 
   if (name === 'returns') {
     loadReturnsData();
-    loadAgents();
+    loadManagers();
   }
 
   if (name === 'registries') {
@@ -465,7 +472,7 @@ function renderReturnInvoices() {
     return;
   }
 
-  returnInvoices.forEach(doc => {
+  filterDocumentsBySearchAndDate(returnInvoices).forEach(doc => {
     const el = document.createElement('div');
     el.className = 'invoice-card clickable';
 
@@ -492,7 +499,7 @@ function renderSalesInvoices() {
     return;
   }
 
-  salesInvoices.forEach(doc => {
+  filterDocumentsBySearchAndDate(salesInvoices).forEach(doc => {
     const el = document.createElement('div');
     el.className = 'invoice-card clickable';
 
@@ -591,7 +598,7 @@ function openSalesInvoice(id) {
     <div class="invoice-header">
       <h3>Расходная накладная №${selectedSalesInvoice.id}</h3>
       <p><b>Покупатель:</b> ${selectedSalesInvoice.customer || '-'}</p>
-      <p><b>Агент:</b> ${selectedSalesInvoice.agent || '-'}</p>
+      <p><b>Менеджер:</b> ${selectedSalesInvoice.manager || selectedSalesInvoice.agent || '-'}</p>
       <p><b>Склад:</b> ${selectedSalesInvoice.warehouse || '-'}</p>
       <p><b>Дата:</b> ${selectedSalesInvoice.date || '-'}</p>
     </div>
@@ -879,10 +886,60 @@ btnImportDirectory.addEventListener('click', async () => {
   }
 });
 
+function filterRegistries(list) {
+
+  const q =
+    registrySearch?.value
+      ?.trim()
+      .toLowerCase() || '';
+
+  const date =
+    registryDate?.value || '';
+
+  return list.filter(doc => {
+
+    const number =
+      doc.number ||
+      doc.registryNumber ||
+      doc.id ||
+      '';
+
+    const driver =
+      doc.driver ||
+      doc.expeditor ||
+      '';
+
+    const matchesText =
+
+      String(number)
+        .toLowerCase()
+        .includes(q)
+
+      ||
+
+      String(driver)
+        .toLowerCase()
+        .includes(q);
+
+    const matchesDate =
+
+      !date ||
+
+      String(doc.date || '')
+        .startsWith(date);
+
+    return matchesText && matchesDate;
+  });
+}
+
 // 📋 РЕЕСТРЫ
 async function loadRegistries() {
   try {
     const rows = await apiFetch('/api/registries/shipping-lists');
+
+    registries = rows;
+    renderRegistries();
+    return;
 
     if (!rows.length) {
       registryList.innerHTML = '<p class="muted">Реестры не найдены</p>';
@@ -912,17 +969,83 @@ async function loadRegistries() {
   }
 }
 
-// 👥 АГЕНТЫ
-async function loadAgents() {
+function renderRegistries() {
+  const rows = filterRegistries(registries);
+
+  if (!rows.length) {
+    registryList.innerHTML = `
+      <p class="muted">
+        Реестры не найдены
+      </p>
+    `;
+    return;
+  }
+
+  registryList.innerHTML = '';
+
+  rows.forEach(doc => {
+    const card = document.createElement('div');
+
+    card.className =
+      'card clickable';
+
+    card.innerHTML = `
+      <h3>
+        ${doc.collected ? '✅' : '⬜'}
+        ПЛ №${doc.number || doc.registryNumber || doc.id}
+      </h3>
+      <p>
+        <b>Дата:</b>
+        ${doc.date || '-'}
+      </p>
+      <p>
+        <b>Склад:</b>
+        ${doc.warehouse || '-'}
+      </p>
+      <p>
+        <b>Водитель:</b>
+        ${doc.driver || doc.expeditor || '-'}
+      </p>
+      <p>
+        <b>Товаров:</b>
+        ${(doc.items || []).length}
+      </p>
+    `;
+
+    card.addEventListener(
+      'click',
+      () => openShippingList(doc)
+    );
+
+    registryList.appendChild(card);
+  });
+}
+
+if (registrySearch) {
+  registrySearch.addEventListener(
+    'input',
+    renderRegistries
+  );
+}
+
+if (registryDate) {
+  registryDate.addEventListener(
+    'change',
+    renderRegistries
+  );
+}
+
+// 👥 МЕНЕДЖЕРЫ / АГЕНТЫ
+async function loadManagers() {
   try {
-    const agents = await apiFetch('/api/agents');
+    const managers = await apiFetch('/api/managers');
 
-    reportAgent.innerHTML = '<option value="all">Все агенты</option>';
+    reportAgent.innerHTML = '<option value="all">Все менеджеры</option>';
 
-    agents.forEach(agent => {
+    managers.forEach(manager => {
       const option = document.createElement('option');
-      option.value = agent.name || agent;
-      option.textContent = agent.name || agent;
+      option.value = manager.name || manager;
+      option.textContent = manager.name || manager;
       reportAgent.appendChild(option);
     });
   } catch (err) {
@@ -1040,4 +1163,46 @@ if (token && currentUser) {
   loginScreen.classList.add('hidden');
   app.classList.remove('hidden');
   showModule('menu');
+}
+
+function filterDocumentsBySearchAndDate(list) {
+  const q = returnsSearch?.value.trim().toLowerCase() || '';
+  const date = returnsDate?.value || '';
+
+  return list.filter(doc => {
+    const number =
+      doc.id ||
+      doc.invoiceNumber ||
+      doc.returnNumber ||
+      '';
+
+    const manager =
+      doc.manager ||
+      doc.agent ||
+      '';
+
+    const matchesText =
+      String(number).toLowerCase().includes(q) ||
+      String(manager).toLowerCase().includes(q);
+
+    const matchesDate =
+      !date ||
+      String(doc.date || '').startsWith(date);
+
+    return matchesText && matchesDate;
+  });
+}
+
+if (returnsSearch) {
+  returnsSearch.addEventListener('input', () => {
+    renderReturnInvoices();
+    renderSalesInvoices();
+  });
+}
+
+if (returnsDate) {
+  returnsDate.addEventListener('change', () => {
+    renderReturnInvoices();
+    renderSalesInvoices();
+  });
 }
