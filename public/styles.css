@@ -445,6 +445,29 @@ textarea:focus {
   color: #475569;
 }
 
+.document-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.document-tab {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 18px;
+  background: #eef3ff;
+  color: #2450d8;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.document-tab.active {
+  background: linear-gradient(135deg, #2450d8, #2f67ff);
+  color: white;
+}
+
 /* =========================================================
    ТАБЛИЦЫ
 ========================================================= */
@@ -882,11 +905,6 @@ textarea:focus {
   }
 }
 
-.document-tabs {
-  display: flex;
-  margin-top: 1rem;
-}
-
 .document-filters {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
@@ -906,21 +924,19 @@ textarea:focus {
 }
 
 @media (max-width: 768px) {
+
   .document-filters {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.7rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
   }
 
   .document-filters input[type="search"] {
-    grid-column: 1 / -1;
-    width: 100%;
-    min-width: 0;
+    min-width: 220px;
   }
 
   .document-filters input[type="date"] {
-    width: 100%;
-    min-width: 0;
+    min-width: 145px;
   }
 
   .document-filters {
