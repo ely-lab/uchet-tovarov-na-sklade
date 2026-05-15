@@ -892,9 +892,12 @@ textarea:focus {
 }
 
 .returns-tab.active {
-  color: white;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
+  min-height: 48px;
+  border-radius: 0.9rem;
+  cursor: pointer;
+  font-weight: 800;
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 @media (max-width: 640px) {
