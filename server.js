@@ -1052,6 +1052,10 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
         items: rows
       };
 
+      const index = db.salesInvoices.findIndex(
+        i => String(i.invoiceNumber) === String(number)
+      );
+
       const index = db.salesInvoices.findIndex(i => String(i.invoiceNumber) === String(number));
 
       if (index >= 0) {
@@ -1061,6 +1065,63 @@ app.post('/api/import-1c-zip', requireAuth, requireAdmin, upload.single('file'),
         db.salesInvoices.push(salesObject);
         importedSalesInvoices++;
       }
+
+      const existingInvoice = db.salesInvoices.find(
+        i => String(i.invoiceNumber) === String(number)
+      );
+
+      const isNewInvoice = !existingInvoice;
+
+      const salesObject = {
+        id: number,
+        invoiceNumber: number,
+        customer,
+        manager,
+        agent: manager,
+        warehouse,
+        date,
+        items: rows
+      };
+
+      if (isNewInvoice) {
+        rows.forEach(item => {
+          const stockItem = db.items.find(i =>
+            String(i.barcode) === String(item.barcode) &&
+            String(i.warehouse) === String(warehouse)
+          );
+          if (!stockItem) return;
+          stockItem.quantity = Number(stockItem.quantity || 0) - Number(item.quantity || 0);
+          if (stockItem.quantity < 0) {
+            stockItem.quantity = 0;
+          }
+          stockItem.updatedAt = new Date().toISOString();
+        });
+      } 
+
+      if (existingInvoice) {
+        Object.assign(existingInvoice, salesObject);
+      } 
+      else {
+      db.salesInvoices.push(salesObject);
+      }
+
+      // ✅ СПИСЫВАЕМ ТОВАРЫ СО СКЛАДА ПО РАСХОДНОЙ
+      rows.forEach(item => {
+        const stockItem = db.items.find(i =>
+          String(i.barcode) === String(item.barcode) &&
+          String(i.warehouse) === String(warehouse)
+        );
+
+        if (!stockItem) return;
+
+        stockItem.quantity = Number(stockItem.quantity || 0) - Number(item.quantity || 0);
+
+        if (stockItem.quantity < 0) {
+          stockItem.quantity = 0;
+        }
+
+        stockItem.updatedAt = new Date().toISOString();
+      });
     });
 
     // 🔁 ВОЗВРАТЫ ОТ ПОКУПАТЕЛЯ
@@ -1597,6 +1658,19 @@ app.post('/api/registries/shipping-lists/:id/collected', requireAuth, requireBra
   saveDB(db);
 
   res.json(doc);
+});
+
+app.get('/api/debug-counts', requireAuth, requireAdmin, (req, res) => {
+  res.json({
+    items: db.items.length,
+    salesInvoices: db.salesInvoices.length,
+    returnInvoices: db.returnInvoices.length,
+    shippingLists: db.shippingLists.length,
+    productDirectory: db.productDirectory.length,
+    customerDirectory: db.customerDirectory.length,
+    agentDirectory: db.agentDirectory.length,
+    warehouseDirectory: db.warehouseDirectory.length
+  });
 });
 
 // 🚀 СТАРТ
