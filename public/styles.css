@@ -464,13 +464,14 @@ textarea:focus {
 }
 
 .document-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 1rem;
   margin-top: 1rem;
 }
 
 .document-tab {
-  flex: 1;
+  width: 100%;
   padding: 1rem 1.5rem;
   border: none;
   border-radius: 18px;
@@ -480,7 +481,6 @@ textarea:focus {
   cursor: pointer;
   transition: 0.2s;
 }
-
 
 .returns-tabs {
   position: sticky;
