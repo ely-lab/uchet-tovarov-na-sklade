@@ -881,3 +881,36 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 }
+
+.document-filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.document-filters input[type="search"] {
+  flex: 1 1 260px;
+}
+
+.document-filters input[type="date"] {
+  flex: 0 0 160px;
+  min-width: 140px;
+}
+
+@media (max-width: 768px) {
+
+  .document-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .document-filters input[type="search"] {
+    min-width: 220px;
+  }
+
+  .document-filters input[type="date"] {
+    min-width: 145px;
+  }
+}
